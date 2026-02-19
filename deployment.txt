@@ -1,0 +1,9 @@
+Frontend URL: <PENDING DEPLOYMENT>
+Backend API URL: <PENDING DEPLOYMENT>
+
+# Deployment Notes
+# Frontend: Deploy to Vercel/Netlify (static hosting)
+# Backend: Deploy to Render/Railway/Fly/Heroku (Node hosting)
+# Database: MongoDB Atlas (connection string in backend .env)
+#
+# After deployment, update the URLs above.
