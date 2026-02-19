@@ -4,7 +4,7 @@ services:
     name: felicity-backend
     env: node
     plan: free
-    root: backend
+    rootDir: backend
     buildCommand: npm install
     startCommand: node index.js
     envVars:
@@ -27,7 +27,7 @@ services:
     name: felicity-frontend
     env: node
     plan: free
-    root: frontend
+    rootDir: frontend
     buildCommand: npm install && npm run build
     startCommand: npx -y serve -s dist -l 10000
     envVars:
