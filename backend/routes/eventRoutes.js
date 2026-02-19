@@ -309,6 +309,21 @@ router.get('/:id', async (req, res) => {
 });
 
 // -------------------------------------------------------------------------
+// GET /api/events/:id/my-status
+// -------------------------------------------------------------------------
+// Check if the current user is registered/attended
+router.get('/:id/my-status', auth, async (req, res) => {
+    try {
+        const registration = await Registration.findOne({ event: req.params.id, participant: req.user._id });
+        if (!registration) return res.json({ registered: false });
+        res.json({ registered: true, ...registration.toJSON() });
+    } catch (err) {
+        console.error('Fetch My Status Error:', err);
+        res.status(500).json({ error: 'Could not fetch status' });
+    }
+});
+
+// -------------------------------------------------------------------------
 // POST /api/events/:id/register
 // -------------------------------------------------------------------------
 // Register a participant for a "Normal" event.

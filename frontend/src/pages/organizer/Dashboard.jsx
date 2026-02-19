@@ -82,7 +82,8 @@ export default function OrganizerDashboard() {
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{e.registrationCount}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                         <Link to={`/organizer/events/${e._id}/edit`} style={{ marginRight: '10px' }}>Edit</Link>
-                                        <Link to={`/organizer/events/${e._id}/attendance`}>Attendance</Link>
+                                        <Link to={`/organizer/events/${e._id}/attendance`} style={{ marginRight: '10px' }}>Attendance</Link>
+                                        <Link to={`/organizer/events/${e._id}/feedback`}>Feedback</Link>
                                     </td>
                                 </tr>
                             ))}

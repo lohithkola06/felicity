@@ -22,6 +22,7 @@ import OrgEventDetail from './pages/organizer/EventDetail';
 import OrgProfile from './pages/organizer/Profile';
 import QRScanner from './pages/organizer/QRScanner';
 import AttendanceList from './pages/organizer/AttendanceList';
+import EventFeedback from './pages/organizer/EventFeedback';
 import PasswordReset from './pages/organizer/PasswordReset';
 
 // Admin
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/organizer/events/:id/edit" element={<ProtectedRoute role="organizer"><EditEvent /></ProtectedRoute>} />
           <Route path="/organizer/events/:id" element={<ProtectedRoute role="organizer"><OrgEventDetail /></ProtectedRoute>} />
           <Route path="/organizer/events/:id/attendance" element={<ProtectedRoute role="organizer"><AttendanceList /></ProtectedRoute>} />
+          <Route path="/organizer/events/:id/feedback" element={<ProtectedRoute role="organizer"><EventFeedback /></ProtectedRoute>} />
           <Route path="/organizer/profile" element={<ProtectedRoute role="organizer"><OrgProfile /></ProtectedRoute>} />
           <Route path="/organizer/scan" element={<ProtectedRoute role="organizer"><QRScanner /></ProtectedRoute>} />
           <Route path="/organizer/password-reset" element={<ProtectedRoute role="organizer"><PasswordReset /></ProtectedRoute>} />

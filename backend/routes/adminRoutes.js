@@ -18,6 +18,11 @@ router.post('/create-organizer', async (req, res) => {
             return res.status(400).json({ error: 'organizerName, category and contactEmail are required' });
         }
 
+        // Strict Email Validation: Organizers must be IIIT domain
+        if (!contactEmail.endsWith('@iiit.ac.in')) {
+            return res.status(400).json({ error: 'Organizer contact email must be an official @iiit.ac.in address.' });
+        }
+
         // generate login email from the organizer name
         const loginEmail = organizerName.toLowerCase().replace(/\s+/g, '.') + '@fest.org';
         const loginPassword = crypto.randomBytes(8).toString('hex');

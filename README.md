@@ -10,7 +10,7 @@
 | Auth | JWT + bcrypt password hashing |
 | Real-time | Socket.IO (team chat) |
 | Email | Nodemailer |
-| Bot Protection | Google reCAPTCHA v2 |
+| Feedback | Custom Anonymous System |
 | QR Codes | qrcode library |
 
 ## Libraries & Justifications
@@ -29,19 +29,29 @@
 | `react-router-dom` | Client-side routing with protected routes |
 | `axios` | Promise-based HTTP client with interceptors for auth headers |
 
-## Advanced Features Implemented
+## Features & Assignment Requirements
 
 ### Tier A (8 marks each)
-1. **Hackathon Team Registration** — Team creation, invitations, management dashboard, automatic ticket generation for team events
-2. **Merchandise Payment Approval Workflow** — Payment proof upload, pending approval state, organizer approval/rejection, stock management, QR and confirmation email
-3. **QR Scanner & Attendance Tracking** — Camera/file-based QR scanning, attendance marking, duplicate scan rejection, live dashboard, CSV export, manual override
+1. **Hackathon Team Registration** — Team creation, invitations, management dashboard, automatic ticket generation for team events.
+2. **Merchandise Payment Approval Workflow** — Payment proof upload, pending approval state, organizer approval/rejection, stock management, QR and confirmation email.
+3. **QR Scanner & Attendance Tracking** — Camera/file-based QR scanning, attendance marking, duplicate scan rejection, live dashboard, CSV export, manual override.
 
 ### Tier B (6 marks each)
-1. **Organizer Password Reset Workflow** — Password reset requests handled by Admin, approval/rejection, auto-generated new password, reset history
-2. **Team Chat** — Real-time Socket.IO chat for hackathon teams, message history, online status indicators
+1. **Organizer Password Reset Workflow** — Password reset requests handled by Admin, approval/rejection, auto-generated new password, reset history.
+2. **Team Chat** — Real-time Socket.IO chat for hackathon teams, message history, online status indicators.
 
 ### Tier C (2 marks each)
-1. **Bot Protection (reCAPTCHA v2)** — Google reCAPTCHA v2 checkbox on Login and Registration with server-side verification
+1. **Anonymous Feedback System** — Allows attendees to submit anonymous ratings and comments for events they attended. Organizers see aggregated feedback. (Replaced reCAPTCHA protection).
+
+### Additional Requirements Implemented
+- **Browse Events (Sec 9.3)**: Full filtering UI with Search, Type, Eligibility, Date Range, "Followed Clubs", and "Trending" toggles.
+- **User Profile (Sec 5 + 9.6)**: Management of user interests and followed clubs; "My Tickets" and "My Teams" view.
+- **Form Builder (Sec 10.4)**: Dynamic registration forms. Organizers can add custom fields (Text, Checkbox, File, etc.) and toggle required/optional status.
+- **Discord Integration (Sec 10.5)**: Automated webhook notifications posted to Discord when an event is published.
+- **Dashboard Analytics (Sec 10.2)**: Organizer dashboard shows aggregate stats for registrations, revenue, and attendance.
+- **Waitlist System (Sec 6.3 + 7)**: Automatic waitlist joining when events are full; notification on spot availability.
+- **Strict Email Validation**: Enforced `@iiit.ac.in` domain requirement for Organizer and Admin accounts.
+- **Event Archival (Sec 11.2)**: Admins can archive events/users instead of just deleting them.
 
 ## Design Choices
 
@@ -51,13 +61,13 @@
 - **Dynamic form builder** — organizers create custom registration forms with text, textarea, dropdown, checkbox, and file upload fields
 - **Status-based event editing** — Draft events are freely editable; Published events restrict edits to description, deadline, and capacity
 - **Registration blocking** — automatic blocking by deadline, capacity, and eligibility requirements
+- **Anonymous Feedback** — Implemented to encourage honest reviews while preserving attendee privacy.
 
 ## Setup Instructions
 
 ### Prerequisites
 - Node.js 18+
 - MongoDB Atlas account or local MongoDB
-- Google reCAPTCHA keys (test keys included for development)
 
 ### Backend
 ```bash
@@ -71,7 +81,6 @@ npm run dev
 ```
 JWT_SECRET=your-secret
 MONGODB_URI=mongodb+srv://...
-RECAPTCHA_SECRET_KEY=6Lcfd3EsAAAAAOCfU9M0tz1lAr38hAeAK6YahN-S
 CLIENT_URL=https://felicity-olive.vercel.app # URL where frontend is hosted
 ADMIN_EMAIL=admin@felicity.iiit.ac.in
 ADMIN_PASSWORD=admin123
@@ -82,7 +91,6 @@ ADMIN_PASSWORD=admin123
 2.  Set Root Directory to `frontend`.
 3.  Add Environment Variable:
     *   `VITE_API_URL` = `https://felicity-backend-xwx8.onrender.com`
-    *   `VITE_RECAPTCHA_SITE_KEY` = `6Lcfd3EsAAAAABEdA5c_Wd4hYPX1EyFPI6m5iOX3`
 
 ### Frontend
 ```bash
@@ -104,7 +112,7 @@ assignment-1/
 ├── backend/
 │   ├── models/          # Mongoose schemas (User, Event, Registration, Team, etc.)
 │   ├── routes/          # Express route handlers
-│   ├── middleware/       # Auth & CAPTCHA middleware
+│   ├── middleware/       # Auth middleware
 │   ├── utils/           # Email, QR, Discord utilities
 │   └── index.js         # Server entry point
 ├── frontend/

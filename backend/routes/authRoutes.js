@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth } = require('../middleware/auth');
-const { verifyRecaptcha } = require('../middleware/captcha');
+const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -21,7 +21,11 @@ function signToken(user) {
 // -------------------------------------------------------------------------
 // This endpoint is for new participants (students) to sign up.
 // Organizers are created by the Admin, not here.
-router.post('/register', verifyRecaptcha, async (req, res) => {
+// POST /api/auth/register
+// -------------------------------------------------------------------------
+// This endpoint is for new participants (students) to sign up.
+// Organizers are created by the Admin, not here.
+router.post('/register', async (req, res) => {
     try {
         const { firstName, lastName, email, password, participantType, collegeName, contactNumber } = req.body;
 
@@ -72,7 +76,7 @@ router.post('/register', verifyRecaptcha, async (req, res) => {
 // POST /api/auth/login
 // -------------------------------------------------------------------------
 // Standard login for all users (Participants, Organizers, Admin)
-router.post('/login', verifyRecaptcha, async (req, res) => {
+router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 

@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
-import ReCAPTCHA from 'react-google-recaptcha';
 
 /**
  * Register Page
@@ -45,18 +44,11 @@ export default function Register() {
             }
         }
 
-        // Captcha Check
-        const captchaToken = recaptchaRef.current.getValue();
-        if (!captchaToken) {
-            setStatusMessage({ type: 'error', text: 'Please verify that you are not a robot.' });
-            return;
-        }
-
         setIsSubmitting(true);
         setStatusMessage(null);
 
         try {
-            await api.post('/auth/register', { ...formData, captchaToken });
+            await api.post('/auth/register', formData);
 
             setStatusMessage({ type: 'success', text: 'Welcome aboard! Redirecting you to the login page...' });
 
@@ -66,7 +58,6 @@ export default function Register() {
         } catch (err) {
             console.error(err);
             setStatusMessage({ type: 'error', text: err.response?.data?.error || 'Registration failed. Please try again.' });
-            recaptchaRef.current.reset(); // Reset captcha on failure
         }
         setIsSubmitting(false);
     }
@@ -176,12 +167,7 @@ export default function Register() {
                     />
                 </div>
 
-                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                    <ReCAPTCHA
-                        ref={recaptchaRef}
-                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                    />
-                </div>
+
 
                 <button
                     type="submit"

@@ -41,6 +41,7 @@ app.use('/api/teams', require('./routes/teamRoutes'));
 app.use('/api/attendance', require('./routes/attendanceRoutes'));
 app.use('/api/password-reset', require('./routes/passwordResetRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/feedback', require('./routes/feedbackRoutes'));
 
 // socket.io connection handling for team chat
 io.on('connection', (socket) => {
