@@ -44,143 +44,50 @@ export default function BrowseEvents() {
     }, [fetchEvents]);
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px', fontFamily: "'Inter', sans-serif" }}>
-            <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '3rem', fontWeight: '800', color: '#1a1a1a', marginBottom: '10px' }}>Discover Campus Happenings</h1>
-                <p style={{ fontSize: '1.1rem', color: '#666', maxWidth: '600px', margin: '0 auto' }}>
-                    Explore events, workshops, and competitions happening around you.
-                </p>
-            </div>
+        <div style={{ maxWidth: '960px', margin: '0 auto', padding: '20px' }}>
+            <h1>Discover Events</h1>
+            <p>Find and register for happenings on campus.</p>
 
-            {/* Filters Container */}
-            <div style={{
-                background: '#fff',
-                padding: '24px',
-                borderRadius: '16px',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                marginBottom: '40px',
-                border: '1px solid #eaeaea'
-            }}>
-                {/* Search Bar */}
-                <div style={{ marginBottom: '24px' }}>
-                    <div style={{ position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#999' }}>🔍</span>
-                        <input
-                            type="text"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            placeholder="Search by event name, organizer, or tags..."
-                            style={{
-                                width: '100%',
-                                padding: '14px 14px 14px 48px',
-                                fontSize: '16px',
-                                borderRadius: '12px',
-                                border: '1px solid #ddd',
-                                outline: 'none',
-                                transition: 'border-color 0.2s',
-                            }}
-                            onFocus={e => e.target.style.borderColor = '#007bff'}
-                            onBlur={e => e.target.style.borderColor = '#ddd'}
-                        />
-                    </div>
+            {/* Search and Filters */}
+            <div style={{ background: '#eee', padding: '15px', border: '1px solid #ccc', marginBottom: '20px' }}>
+                <div style={{ marginBottom: '10px' }}>
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events..." style={{ width: '100%', padding: '8px' }} />
                 </div>
 
-                {/* Filter Controls */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignItems: 'end' }}>
-
-                    {/* Event Type */}
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px', color: '#444' }}>Event Type</label>
-                        <select
-                            value={typeFilter}
-                            onChange={e => setTypeFilter(e.target.value)}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff' }}
-                        >
-                            <option value="">All Events</option>
-                            <option value="normal">Events & Workshops</option>
-                            <option value="hackathon">Hackathons</option>
-                            <option value="merchandise">Merchandise Sales</option>
+                        <strong style={{ display: 'block', marginBottom: '5px' }}>Type:</strong>
+                        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                            <option value="">All Types</option>
+                            <option value="normal">Normal Event</option>
+                            <option value="merchandise">Merchandise</option>
+                            <option value="hackathon">Hackathon</option>
                         </select>
                     </div>
 
-                    {/* Eligibility */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px', color: '#444' }}>Who Can Join?</label>
-                        <select
-                            value={eligibility}
-                            onChange={e => setEligibility(e.target.value)}
-                            style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ddd', background: '#fff' }}
-                        >
-                            <option value="">Everyone</option>
-                            <option value="all">Open to All</option>
-                            <option value="iiit">IIIT Students Only</option>
+                        <strong style={{ display: 'block', marginBottom: '5px' }}>Eligibility:</strong>
+                        <select value={eligibility} onChange={e => setEligibility(e.target.value)}>
+                            <option value="">Any</option>
+                            <option value="all">Everyone</option>
+                            <option value="iiit">IIIT Only</option>
+                            <option value="non-iiit">Non-IIIT</option>
                         </select>
                     </div>
 
-                    {/* Date Range - Simplified */}
                     <div>
-                        <label style={{ display: 'block', marginBottom: '8px', fontWeight: '600', fontSize: '14px', color: '#444' }}>Date Range</label>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={e => setStartDate(e.target.value)}
-                                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-                            />
-                            <span style={{ color: '#999' }}>to</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={e => setEndDate(e.target.value)}
-                                style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-                            />
-                        </div>
+                        <strong style={{ display: 'block', marginBottom: '5px' }}>Date Range:</strong>
+                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /> to <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
                     </div>
                 </div>
 
-                {/* Toggles */}
-                <div style={{ marginTop: '24px', display: 'flex', gap: '24px', paddingTop: '20px', borderTop: '1px solid #f0f0f0' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
-                        <div style={{ position: 'relative', width: '40px', height: '20px' }}>
-                            <input
-                                type="checkbox"
-                                checked={trending}
-                                onChange={e => setTrending(e.target.checked)}
-                                style={{ opacity: 0, width: 0, height: 0 }}
-                            />
-                            <span style={{
-                                position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                                backgroundColor: trending ? '#007bff' : '#ccc', borderRadius: '20px', transition: '.4s'
-                            }}>
-                                <span style={{
-                                    position: 'absolute', content: '""', height: '16px', width: '16px', left: trending ? '22px' : '2px', bottom: '2px',
-                                    backgroundColor: 'white', borderRadius: '50%', transition: '.4s'
-                                }}></span>
-                            </span>
-                        </div>
-                        <span style={{ fontWeight: '500', color: '#333' }}>🔥 Trending (Top 5)</span>
+                <div style={{ marginTop: '10px', display: 'flex', gap: '15px' }}>
+                    <label>
+                        <input type="checkbox" checked={trending} onChange={e => setTrending(e.target.checked)} /> Show Trending Top 5
                     </label>
-
                     {user && user.role === 'participant' && (
-                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '10px' }}>
-                            <div style={{ position: 'relative', width: '40px', height: '20px' }}>
-                                <input
-                                    type="checkbox"
-                                    checked={followedOnly}
-                                    onChange={e => setFollowedOnly(e.target.checked)}
-                                    style={{ opacity: 0, width: 0, height: 0 }}
-                                />
-                                <span style={{
-                                    position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                                    backgroundColor: followedOnly ? '#28a745' : '#ccc', borderRadius: '20px', transition: '.4s'
-                                }}>
-                                    <span style={{
-                                        position: 'absolute', content: '""', height: '16px', width: '16px', left: followedOnly ? '22px' : '2px', bottom: '2px',
-                                        backgroundColor: 'white', borderRadius: '50%', transition: '.4s'
-                                    }}></span>
-                                </span>
-                            </div>
-                            <span style={{ fontWeight: '500', color: '#333' }}>❤️ Following</span>
+                        <label>
+                            <input type="checkbox" checked={followedOnly} onChange={e => setFollowedOnly(e.target.checked)} /> Followed Clubs Only
                         </label>
                     )}
                 </div>
@@ -188,74 +95,27 @@ export default function BrowseEvents() {
 
             {/* Event List */}
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '60px', color: '#666' }}>Finding the best events for you...</div>
+                <p>Loading events...</p>
             ) : events.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '80px', background: '#f9f9f9', borderRadius: '16px', border: '1px dashed #ddd' }}>
-                    <h3 style={{ color: '#444', marginBottom: '10px' }}>No events matched your search</h3>
-                    <p style={{ color: '#888' }}>Try adjusting your filters or clearing them to see everything.</p>
-                    <button
-                        onClick={() => { setSearch(''); setTypeFilter(''); setEligibility(''); setStartDate(''); setEndDate(''); setTrending(false); setFollowedOnly(false); }}
-                        style={{ marginTop: '20px', padding: '10px 20px', background: '#fff', border: '1px solid #ddd', borderRadius: '8px', cursor: 'pointer', color: '#007bff' }}
-                    >
-                        Clear All Filters
-                    </button>
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                    <h3>No Events Found</h3>
+                    <p>Try adjusting your search filters.</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '30px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                     {events.map((event) => (
-                        <div key={event._id} style={{
-                            background: '#fff',
-                            borderRadius: '16px',
-                            overflow: 'hidden',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                            transition: 'transform 0.2s, box-shadow 0.2s',
-                            border: '1px solid #f0f0f0',
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}>
-                            <div style={{ padding: '20px', flex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                    <span style={{
-                                        background: event.type === 'hackathon' ? '#e3f2fd' : event.type === 'merchandise' ? '#fff3e0' : '#f3f4f6',
-                                        color: event.type === 'hackathon' ? '#1976d2' : event.type === 'merchandise' ? '#f57c00' : '#4b5563',
-                                        padding: '4px 10px',
-                                        borderRadius: '20px',
-                                        fontSize: '12px',
-                                        fontWeight: '600',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
-                                    }}>
-                                        {event.type}
-                                    </span>
-                                    {event.status === 'ongoing' && (
-                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#28a745', fontWeight: '600' }}>
-                                            <span style={{ width: '8px', height: '8px', background: '#28a745', borderRadius: '50%' }}></span>
-                                            LIVE
-                                        </span>
-                                    )}
-                                </div>
-                                <h3 style={{ margin: '0 0 10px 0', fontSize: '1.25rem', lineHeight: '1.4' }}>
-                                    <Link to={`/events/${event._id}`} style={{ color: '#1a1a1a', textDecoration: 'none', transition: 'color 0.2s' }}>
-                                        {event.name}
-                                    </Link>
-                                </h3>
-                                <div style={{ fontSize: '14px', color: '#555', marginBottom: '15px' }}>
-                                    <span style={{ display: 'inline-block', marginRight: '15px' }}>🗓 {event.startDate ? new Date(event.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBA'}</span>
-                                    <span>👤 {event.organizer?.organizerName || 'Unknown Organizer'}</span>
-                                </div>
-                                <p style={{ color: '#666', fontSize: '14px', lineHeight: '1.5', margin: '0', display: '-webkit-box', WebkitLineClamp: '3', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                                    {event.description}
-                                </p>
-                            </div>
-                            <div style={{ padding: '20px', borderTop: '1px solid #f5f5f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fafafa' }}>
-                                <span style={{ fontWeight: '600', color: '#333' }}>
-                                    {event.registrationFee > 0 ? `₹${event.registrationFee}` : 'Free'}
+                        <div key={event._id} style={{ border: '1px solid #ccc', padding: '15px', background: '#fff', borderRadius: '4px' }}>
+                            <div style={{ marginBottom: '10px' }}>
+                                <span style={{ background: '#eee', padding: '3px 8px', borderRadius: '3px', fontSize: '12px', marginRight: '5px', textTransform: 'capitalize' }}>{event.type}</span>
+                                <span style={{ fontSize: '12px', color: event.status === 'published' ? 'green' : 'gray' }}>
+                                    {event.status === 'published' ? 'Live' : event.status}
                                 </span>
-                                <Link to={`/events/${event._id}`} style={{
-                                    padding: '8px 16px', background: '#007bff', color: '#fff', textDecoration: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '500'
-                                }}>
-                                    View Details
-                                </Link>
+                            </div>
+                            <h3><Link to={`/events/${event._id}`}>{event.name}</Link></h3>
+                            <p style={{ color: '#666', fontSize: '14px', marginBottom: '10px' }}>{event.description}</p>
+                            <div style={{ fontSize: '12px', color: '#888' }}>
+                                {event.startDate ? new Date(event.startDate).toLocaleDateString() : 'Date TBD'}
+                                {event.registrationFee > 0 ? ` | Rs. ${event.registrationFee}` : ' | Free'}
                             </div>
                         </div>
                     ))}

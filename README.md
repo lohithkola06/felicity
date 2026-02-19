@@ -33,8 +33,7 @@
 
 ### Tier A (8 marks each)
 1. **Hackathon Team Registration** — Team creation, invitations, management dashboard, automatic ticket generation for team events.
-2. **Merchandise Payment Approval Workflow** — Payment proof upload, pending approval state, organizer approval/rejection, stock management, QR and confirmation email.
-3. **QR Scanner & Attendance Tracking** — Camera/file-based QR scanning, attendance marking, duplicate scan rejection, live dashboard, CSV export, manual override.
+2. **QR Scanner & Attendance Tracking** — Camera/file-based QR scanning, attendance marking, duplicate scan rejection, live dashboard, CSV export, manual override.
 
 ### Tier B (6 marks each)
 1. **Organizer Password Reset Workflow** — Password reset requests handled by Admin, approval/rejection, auto-generated new password, reset history.
@@ -55,7 +54,7 @@
 
 ## Design Choices
 
-- **Retro 2010s UI** - Simple, functional, and nostalgic design (No glassmorphism).
+- **UI** - Simple, functional, and easy to use design.
 - **Role-specific navigation** — each user role (Participant, Organizer, Admin) sees contextual nav items
 - **Onboarding flow** — new participants select interests and follow clubs to personalize their experience
 - **Dynamic form builder** — organizers create custom registration forms with text, textarea, dropdown, checkbox, and file upload fields
