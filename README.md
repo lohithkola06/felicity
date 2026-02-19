@@ -72,7 +72,7 @@ npm run dev
 JWT_SECRET=your-secret
 MONGODB_URI=mongodb+srv://...
 RECAPTCHA_SECRET_KEY=your-recaptcha-secret
-CLIENT_URL=https://felicity-frontend.vercel.app # URL where frontend is hosted
+CLIENT_URL=https://felicity-olive.vercel.app # URL where frontend is hosted
 ADMIN_EMAIL=admin@felicity.iiit.ac.in
 ADMIN_PASSWORD=admin123
 ```
