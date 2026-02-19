@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: felicity-backend
+    env: node
+    plan: free
+    root: backend
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: RECAPTCHA_SECRET_KEY
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        value: admin@felicity.iiit.ac.in
+      - key: ADMIN_PASSWORD
+        sync: false
