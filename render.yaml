@@ -29,7 +29,7 @@ services:
     plan: free
     root: frontend
     buildCommand: npm install && npm run build
-    startCommand: npx serve -s dist -l 10000
+    startCommand: npx -y serve -s dist -l 10000
     envVars:
       - key: VITE_API_URL
         fromService:
