@@ -71,7 +71,7 @@ npm run dev
 ```
 JWT_SECRET=your-secret
 MONGODB_URI=mongodb+srv://...
-RECAPTCHA_SECRET_KEY=your-recaptcha-secret
+RECAPTCHA_SECRET_KEY=6Lcfd3EsAAAAAOCfU9M0tz1lAr38hAeAK6YahN-S
 CLIENT_URL=https://felicity-olive.vercel.app # URL where frontend is hosted
 ADMIN_EMAIL=admin@felicity.iiit.ac.in
 ADMIN_PASSWORD=admin123
@@ -82,6 +82,7 @@ ADMIN_PASSWORD=admin123
 2.  Set Root Directory to `frontend`.
 3.  Add Environment Variable:
     *   `VITE_API_URL` = `https://felicity-backend-xwx8.onrender.com`
+    *   `VITE_RECAPTCHA_SITE_KEY` = `6Lcfd3EsAAAAABEdA5c_Wd4hYPX1EyFPI6m5iOX3`
 
 ### Frontend
 ```bash

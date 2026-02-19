@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
@@ -10,15 +11,25 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
+    const recaptchaRef = useRef();
+
     async function handleSubmit(e) {
         e.preventDefault();
+
+        const captchaToken = recaptchaRef.current?.getValue();
+        if (!captchaToken) {
+            setError('Please complete the reCAPTCHA verification.');
+            return;
+        }
+
         try {
-            const user = await login({ email, password });
+            const user = await login({ email, password, captchaToken });
             if (user.role === 'admin') navigate('/admin/dashboard');
             else if (user.role === 'organizer') navigate('/organizer/dashboard');
             else navigate('/dashboard');
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed');
+            recaptchaRef.current?.reset();
         }
     }
 
@@ -37,6 +48,13 @@ export default function Login() {
                 </div>
                 <button type="submit" style={{ width: '100%' }}>Login</button>
             </form>
+
+            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
+                <ReCAPTCHA
+                    ref={recaptchaRef}
+                    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                />
+            </div>
             <p style={{ marginTop: '10px' }}>
                 Don't have an account? <Link to="/register">Register here</Link>
             </p>

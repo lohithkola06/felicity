@@ -179,7 +179,7 @@ export default function Register() {
                 <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
                     <ReCAPTCHA
                         ref={recaptchaRef}
-                        sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Test key, mostly harmless
+                        sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
                     />
                 </div>
 
