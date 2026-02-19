@@ -22,17 +22,4 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
 
-  # Frontend (Served as Web Service to avoid static type errors)
-  - type: web
-    name: felicity-frontend
-    env: node
-    plan: free
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npx -y serve -s dist -l 10000
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: felicity-backend
-          property: url
+
