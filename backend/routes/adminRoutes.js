@@ -78,9 +78,17 @@ router.patch('/organizers/:id/archive', async (req, res) => {
 });
 
 // DELETE /api/admin/organizers/:id
+// When an organizer is permanently deleted, all associated data must go with them:
+// their events, registrations on those events, teams, chat messages, and feedback.
 router.delete('/organizers/:id', async (req, res) => {
     try {
-        const organizer = await User.findOneAndDelete({
+        const Event = require('../models/Event');
+        const Registration = require('../models/Registration');
+        const Team = require('../models/Team');
+        const ChatMessage = require('../models/ChatMessage');
+        const Feedback = require('../models/Feedback');
+
+        const organizer = await User.findOne({
             _id: req.params.id,
             role: 'organizer',
         });
@@ -89,7 +97,32 @@ router.delete('/organizers/:id', async (req, res) => {
             return res.status(404).json({ error: 'Organizer not found' });
         }
 
-        res.json({ message: 'Organizer deleted' });
+        // Find all events created by this organizer
+        const orgEvents = await Event.find({ organizer: organizer._id });
+        const eventIds = orgEvents.map(e => e._id);
+
+        // Cascade: remove all registrations tied to those events
+        await Registration.deleteMany({ event: { $in: eventIds } });
+
+        // Cascade: remove teams that were formed for those events
+        await Team.deleteMany({ event: { $in: eventIds } });
+
+        // Cascade: remove chat messages from those teams/events
+        await ChatMessage.deleteMany({ event: { $in: eventIds } });
+
+        // Cascade: remove feedback submitted for those events
+        await Feedback.deleteMany({ event: { $in: eventIds } });
+
+        // Remove the events themselves
+        await Event.deleteMany({ organizer: organizer._id });
+
+        // Finally, remove the organizer account
+        await User.findByIdAndDelete(organizer._id);
+
+        res.json({
+            message: 'Organizer and all associated data deleted successfully',
+            deletedEvents: eventIds.length,
+        });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Failed to delete organizer' });

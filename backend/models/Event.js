@@ -6,7 +6,7 @@ const eventSchema = new mongoose.Schema({
     description: { type: String, required: true },
     type: { type: String, enum: ['normal', 'merchandise'], required: true },
     status: { type: String, enum: ['draft', 'published', 'ongoing', 'completed', 'closed'], default: 'draft' },
-    eligibility: { type: String, default: 'all' }, // 'all' or 'iiit-only'
+    eligibility: { type: String, enum: ['all', 'iiit-only'], default: 'all' },
 
     registrationDeadline: Date,
     startDate: Date,

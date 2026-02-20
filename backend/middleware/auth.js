@@ -17,6 +17,12 @@ const auth = async (req, res, next) => {
             return res.status(401).json({ error: 'User not found' });
         }
 
+        // If an admin archived or disabled this account, reject further requests.
+        // The user will effectively be logged out on their next interaction.
+        if (user.isArchived) {
+            return res.status(403).json({ error: 'This account has been deactivated by an administrator.' });
+        }
+
         req.user = user;
         next();
     } catch (err) {

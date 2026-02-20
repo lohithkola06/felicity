@@ -1,4 +1,5 @@
 const express = require('express');
+const jwt = require('jsonwebtoken');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
@@ -9,6 +10,59 @@ const { sendDiscordNotification } = require('../utils/discord');
 
 const router = express.Router();
 
+// ---------------------------------------------------------------------------
+// Helper: Automatically reconcile an event's status with the current time.
+// If the event has a start/end date, the stored status may be stale —
+// e.g. a "published" event whose start date has already passed should
+// appear as "ongoing", and an "ongoing" event whose end date has passed
+// should appear as "completed".  This keeps things accurate without
+// requiring organizers to babysit status toggles.
+// ---------------------------------------------------------------------------
+async function reconcileEventStatus(event) {
+    if (!event) return event;
+    const now = new Date();
+    let changed = false;
+
+    if (event.status === 'published' && event.startDate && new Date(event.startDate) <= now) {
+        event.status = 'ongoing';
+        changed = true;
+    }
+    if (event.status === 'ongoing' && event.endDate && new Date(event.endDate) <= now) {
+        event.status = 'completed';
+        changed = true;
+    }
+
+    if (changed) {
+        await event.save();
+    }
+    return event;
+}
+
+// Batch version for arrays of events (lean or mongoose docs)
+async function reconcileMany(events) {
+    const now = new Date();
+    const bulkOps = [];
+
+    for (const e of events) {
+        let newStatus = null;
+        if (e.status === 'published' && e.startDate && new Date(e.startDate) <= now) {
+            newStatus = 'ongoing';
+        }
+        if ((e.status === 'ongoing' || newStatus === 'ongoing') && e.endDate && new Date(e.endDate) <= now) {
+            newStatus = 'completed';
+        }
+        if (newStatus && newStatus !== e.status) {
+            bulkOps.push({ updateOne: { filter: { _id: e._id }, update: { $set: { status: newStatus } } } });
+            e.status = newStatus; // reflect in the returned data too
+        }
+    }
+
+    if (bulkOps.length > 0) {
+        await Event.bulkWrite(bulkOps);
+    }
+    return events;
+}
+
 // =============================================================================
 // ORGANIZER ROUTES
 // =============================================================================
@@ -16,15 +70,25 @@ const router = express.Router();
 // -------------------------------------------------------------------------
 // POST /api/events
 // -------------------------------------------------------------------------
-// Create a new event. 
-// Note: All events start as 'draft' by default so the organizer can edit them before publishing.
+// Create a new event.
+// By default events are saved as 'draft' so the organizer can review before
+// going live, but we also allow a direct publish if the organizer chooses to.
 router.post('/', auth, authorize('organizer'), async (req, res) => {
     try {
+        // Allow the organizer to optionally publish immediately
+        const initialStatus = req.body.publishNow ? 'published' : 'draft';
+
         const event = await Event.create({
             ...req.body,
             organizer: req.user._id,
-            status: 'draft', // Enforcement: Always draft first
+            status: initialStatus,
         });
+
+        // If publishing right away, fire off a Discord notification
+        if (initialStatus === 'published' && req.user.discordWebhook) {
+            sendDiscordNotification(req.user.discordWebhook, event).catch(err => console.error('Discord Hook Failed:', err));
+        }
+
         res.status(201).json(event);
     } catch (err) {
         console.error('Create Event Error:', err);
@@ -39,6 +103,7 @@ router.post('/', auth, authorize('organizer'), async (req, res) => {
 router.get('/my-events', auth, authorize('organizer'), async (req, res) => {
     try {
         const events = await Event.find({ organizer: req.user._id }).sort('-createdAt');
+        await reconcileMany(events);
         res.json(events);
     } catch (err) {
         console.error('Fetch My Events Error:', err);
@@ -260,6 +325,9 @@ router.get('/browse', async (req, res) => {
             .populate('organizer', 'organizerName category')
             .lean();
 
+        // Auto-update stale statuses so participants see accurate info
+        await reconcileMany(events);
+
         // Sorting Logic
         if (trending === 'true') {
             // "Trending" = Most registrations
@@ -301,6 +369,10 @@ router.get('/:id', async (req, res) => {
             .populate('organizer', 'organizerName category description contactEmail');
 
         if (!event) return res.status(404).json({ error: 'Event not found.' });
+
+        // Make sure the status reflects reality before sending it out
+        await reconcileEventStatus(event);
+
         res.json(event);
     } catch (err) {
         console.error('Fetch Event Detail Error:', err);

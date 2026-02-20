@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Feedback = require('../models/Feedback');
 const Event = require('../models/Event');
 const { auth } = require('../middleware/auth');
@@ -24,6 +25,11 @@ router.post('/', auth, async (req, res) => {
         const event = await Event.findById(eventId);
         if (!event) {
             return res.status(404).json({ error: 'Event not found.' });
+        }
+
+        // Only allow feedback after event is completed or closed
+        if (!['completed', 'closed'].includes(event.status)) {
+            return res.status(403).json({ error: 'Feedback can only be submitted after the event has ended.' });
         }
 
         // Verify user attended the event

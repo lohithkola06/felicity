@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
 
     // organizer fields
     organizerName: String,
-    category: String,
+    category: { type: String, enum: ['Technical', 'Cultural', 'Sports', 'Other'] },
     description: String,
     contactEmail: String,
     contactNumber: String,

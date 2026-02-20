@@ -25,16 +25,19 @@ export default function Navbar() {
                                 <>
                                     <li><Link to="/organizer/dashboard" style={{ color: '#ccc' }}>Dashboard</Link></li>
                                     <li><Link to="/organizer/events/new" style={{ color: '#ccc' }}>Create Event</Link></li>
+                                    <li><Link to="/organizer/profile" style={{ color: '#ccc' }}>Profile</Link></li>
+                                    <li><Link to="/organizer/password-reset" style={{ color: '#ccc' }}>Password Reset</Link></li>
                                 </>
                             )}
                             {user.role === 'participant' && (
                                 <>
                                     <li><Link to="/dashboard" style={{ color: '#ccc' }}>My Dashboard</Link></li>
                                     <li><Link to="/teams" style={{ color: '#ccc' }}>My Teams</Link></li>
+                                    <li><Link to="/profile" style={{ color: '#ccc' }}>Profile</Link></li>
                                 </>
                             )}
                             {user.role === 'admin' && (
-                                <li><Link to="/admin/dashboard" style={{ color: '#ccc' }}>Admin</Link></li>
+                                <li><Link to="/admin/dashboard" style={{ color: '#ccc' }}>Dashboard</Link></li>
                             )}
                             <li><button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', textDecoration: 'underline' }}>Logout</button></li>
                         </>

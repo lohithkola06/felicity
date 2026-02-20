@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 
 export default function ParticipantDashboard() {
-    const [registrations, setRegistrations] = useState([]);
+    const [data, setData] = useState({ upcoming: [], history: { normal: [], merchandise: [], completed: [], cancelled: [] } });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
 
@@ -14,7 +14,7 @@ export default function ParticipantDashboard() {
     const fetchDashboard = async () => {
         try {
             const res = await api.get('/participant/dashboard');
-            setRegistrations(res.data);
+            setData(res.data);
         } catch (err) {
             console.error(err);
         } finally {
@@ -23,7 +23,7 @@ export default function ParticipantDashboard() {
     };
 
     async function handleCancel(regId) {
-        if (!confirm('Are you sure you want to cancel? Refund policy applies.')) return;
+        if (!confirm('Are you sure you want to cancel this registration?')) return;
         try {
             await api.post(`/participant/registrations/${regId}/cancel`);
             fetchDashboard();
@@ -32,21 +32,38 @@ export default function ParticipantDashboard() {
         }
     }
 
-    const filtered = registrations.filter(r => {
-        if (activeTab === 'upcoming') return r.status === 'registered' && new Date(r.event.startDate) > new Date();
-        if (activeTab === 'past') return r.status === 'attended' || (r.status === 'registered' && new Date(r.event.startDate) <= new Date());
-        if (activeTab === 'cancelled') return r.status === 'cancelled';
-        return true;
-    });
+    // Pick which list to show based on active tab
+    let items = [];
+    if (activeTab === 'upcoming') items = data.upcoming || [];
+    else if (activeTab === 'normal') items = data.history?.normal || [];
+    else if (activeTab === 'merchandise') items = data.history?.merchandise || [];
+    else if (activeTab === 'completed') items = data.history?.completed || [];
+    else if (activeTab === 'cancelled') items = data.history?.cancelled || [];
+
+    const tabs = [
+        { key: 'upcoming', label: 'Upcoming' },
+        { key: 'normal', label: 'Normal' },
+        { key: 'merchandise', label: 'Merchandise' },
+        { key: 'completed', label: 'Completed' },
+        { key: 'cancelled', label: 'Cancelled' },
+    ];
 
     return (
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '20px' }}>
             <h1>My Dashboard</h1>
 
-            <div style={{ marginBottom: '20px', borderBottom: '1px solid #ccc' }}>
-                <button onClick={() => setActiveTab('upcoming')} style={{ fontWeight: activeTab === 'upcoming' ? 'bold' : 'normal', marginRight: '10px' }}>Upcoming</button>
-                <button onClick={() => setActiveTab('past')} style={{ fontWeight: activeTab === 'past' ? 'bold' : 'normal', marginRight: '10px' }}>History</button>
-                <button onClick={() => setActiveTab('cancelled')} style={{ fontWeight: activeTab === 'cancelled' ? 'bold' : 'normal' }}>Cancelled</button>
+            <div style={{ marginBottom: '20px', borderBottom: '2px solid #ccc', display: 'flex', gap: '5px' }}>
+                {tabs.map(tab => (
+                    <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                        style={{
+                            fontWeight: activeTab === tab.key ? 'bold' : 'normal',
+                            padding: '8px 14px',
+                            borderBottom: activeTab === tab.key ? '2px solid #337ab7' : 'none',
+                            background: 'none', border: 'none', cursor: 'pointer'
+                        }}>
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             {loading ? <p>Loading...</p> : (
@@ -54,39 +71,42 @@ export default function ParticipantDashboard() {
                     <thead>
                         <tr style={{ background: '#eee', textAlign: 'left' }}>
                             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Event</th>
+                            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Organizer</th>
                             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Date</th>
                             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Team</th>
                             <th style={{ padding: '10px', border: '1px solid #ddd' }}>Status</th>
-                            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Actions</th>
+                            <th style={{ padding: '10px', border: '1px solid #ddd' }}>Ticket / Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filtered.length === 0 ? (
-                            <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center' }}>No records found.</td></tr>
-                        ) : filtered.map(reg => (
-                            <tr key={reg._id}>
+                        {items.length === 0 ? (
+                            <tr><td colSpan="6" style={{ padding: '20px', textAlign: 'center', color: '#888' }}>No records in this category.</td></tr>
+                        ) : items.map(entry => (
+                            <tr key={entry.registrationId}>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {reg.event ? (
-                                        <>
-                                            <Link to={`/events/${reg.event._id}`}>{reg.event.name}</Link>
-                                            <div style={{ fontSize: '12px', color: '#666' }}>{reg.event.type}</div>
-                                        </>
-                                    ) : <span style={{ color: 'red' }}>Event Deleted</span>}
+                                    <strong>{entry.eventName || 'Unknown'}</strong>
+                                    <div style={{ fontSize: '12px', color: '#666', textTransform: 'capitalize' }}>{entry.eventType}</div>
+                                </td>
+                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>{entry.organizer}</td>
+                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                                    {entry.startDate ? new Date(entry.startDate).toLocaleDateString() : '-'}
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {reg.event ? new Date(reg.event.startDate).toLocaleDateString() : '-'}
+                                    {entry.teamName || '-'}
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {reg.teamName || '-'}
+                                    <span style={{
+                                        padding: '2px 6px', borderRadius: '3px', fontSize: '12px',
+                                        background: entry.status === 'cancelled' ? '#f2dede' : entry.status === 'completed' ? '#dff0d8' : '#fcf8e3',
+                                    }}>
+                                        {entry.status}
+                                    </span>
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {reg.status}
-                                </td>
-                                <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {activeTab === 'upcoming' && (
-                                        <button onClick={() => handleCancel(reg._id)} style={{ color: 'red', borderColor: 'red' }}>Cancel</button>
+                                    {entry.ticketId && <div style={{ fontSize: '12px', marginBottom: '4px' }}>Ticket: {entry.ticketId}</div>}
+                                    {activeTab === 'upcoming' && entry.status !== 'cancelled' && (
+                                        <button onClick={() => handleCancel(entry.registrationId)} style={{ color: 'red', fontSize: '12px', cursor: 'pointer' }}>Cancel</button>
                                     )}
-                                    {reg.ticketId && <div style={{ fontSize: '12px', marginTop: '5px' }}>Ticket: {reg.ticketId}</div>}
                                 </td>
                             </tr>
                         ))}

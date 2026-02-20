@@ -9,17 +9,13 @@ services:
     startCommand: node index.js
     envVars:
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://festAdmin:admin123@festcluster.b75rdes.mongodb.net/fest_management?appName=FestCluster
       - key: JWT_SECRET
-        sync: false
-      - key: RECAPTCHA_SECRET_KEY
-        sync: false
-      # We will set CLIENT_URL to the frontend URL after deployment, or use a placeholder for now
-      - key: CLIENT_URL 
-        sync: false
+        value: evP8PLzg6C8kcU0dT9st8+qk9NKdk7MdS5acezSIZZQ=
+      - key: CLIENT_URL
+        value: https://felicity-olive.vercel.app
       - key: ADMIN_EMAIL
         value: admin@iiit.ac.in
       - key: ADMIN_PASSWORD
         sync: false
-
-
+        value: admin123

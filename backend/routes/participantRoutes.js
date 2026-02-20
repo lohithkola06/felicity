@@ -53,8 +53,17 @@ router.get('/dashboard', async (req, res) => {
     }
 });
 
-// get my profile
-router.get('/profile', (req, res) => res.json({ user: req.user }));
+// get my profile - populate followed clubs so the frontend can display them
+router.get('/profile', async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id)
+            .populate('followedOrganizers', 'organizerName category description');
+        res.json({ user });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: 'failed to load profile' });
+    }
+});
 
 // update profile - email and participantType cant be changed
 router.put('/profile', async (req, res) => {
@@ -171,19 +180,24 @@ router.post('/clubs/:id/unfollow', async (req, res) => {
     }
 });
 
-// cancel registration
+// cancel registration (not allowed for merchandise orders)
 router.post('/registrations/:id/cancel', async (req, res) => {
     try {
         const reg = await Registration.findOne({ _id: req.params.id, participant: req.user._id });
         if (!reg) return res.status(404).json({ error: 'registration not found' });
         if (reg.status === 'cancelled') return res.status(400).json({ error: 'already cancelled' });
 
+        // Merchandise orders cannot be cancelled once placed
+        const event = await Event.findById(reg.event);
+        if (event && event.type === 'merchandise') {
+            return res.status(400).json({ error: 'Merchandise orders cannot be cancelled once placed.' });
+        }
+
         // mark cancelled
         reg.status = 'cancelled';
         await reg.save();
 
         // decrement event count
-        const event = await Event.findById(reg.event);
         if (event) {
             event.registrationCount = Math.max(0, event.registrationCount - 1);
 

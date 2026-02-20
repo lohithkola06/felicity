@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-// hackathon team - leader creates, invites members, all must accept
+// event team - leader creates, invites members, all must accept
 const teamSchema = new mongoose.Schema({
     event: { type: mongoose.Schema.Types.ObjectId, ref: 'Event', required: true },
     name: { type: String, required: true },

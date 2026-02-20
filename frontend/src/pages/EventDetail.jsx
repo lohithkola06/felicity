@@ -147,6 +147,7 @@ export default function EventDetail() {
                     <p><strong>Starts:</strong> {new Date(event.startDate).toLocaleString()}</p>
                     <p><strong>Ends:</strong> {new Date(event.endDate).toLocaleString()}</p>
                     <p><strong>Venue:</strong> {event.venue || 'To Be Announced'}</p>
+                    <p><strong>Eligibility:</strong> {event.eligibility === 'iiit-only' ? 'IIIT Students Only' : 'Open to Everyone'}</p>
 
                     {event.type === 'normal' && (
                         <>

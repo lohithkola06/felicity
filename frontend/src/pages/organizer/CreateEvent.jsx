@@ -16,6 +16,7 @@ export default function CreateEvent() {
     const navigate = useNavigate();
     const [status, setStatus] = useState(null); // Feedback for success/error
     const [submitting, setSubmitting] = useState(false);
+    const [publishNow, setPublishNow] = useState(false); // Whether to publish directly
 
     // Form State
     const [form, setForm] = useState({
@@ -28,7 +29,8 @@ export default function CreateEvent() {
         registrationFee: 0,
         registrationDeadline: '',
         type: 'normal', // 'normal' or 'merchandise'
-        eligibility: 'all', // 'all', 'iiit-only', 'staff-only'
+        eligibility: 'all', // 'all' or 'iiit-only'
+        tags: '', // Comma-separated list of tags for discovery
         purchaseLimitPerUser: 1, // Specific to merch
     });
 
@@ -69,6 +71,8 @@ export default function CreateEvent() {
         try {
             // Construct the payload based on event type
             const payload = { ...form };
+            // Parse tags from comma-separated string into an array
+            payload.tags = form.tags.split(',').map(t => t.trim()).filter(Boolean);
 
             // If it's a merch event, attach the items and limit
             if (form.type === 'merchandise') {
@@ -89,9 +93,11 @@ export default function CreateEvent() {
             }
 
             // Send to backend
+            payload.publishNow = publishNow;
             await api.post('/events', payload);
 
-            setStatus({ type: 'success', text: 'Event draft created successfully! Redirecting you...' });
+            const actionText = publishNow ? 'Event published' : 'Event draft created';
+            setStatus({ type: 'success', text: `${actionText} successfully! Redirecting you...` });
 
             // Redirect to dashboard after a short delay so they can see the success message
             setTimeout(() => navigate('/organizer'), 1500);
@@ -169,6 +175,21 @@ export default function CreateEvent() {
                         <input type="datetime-local" style={{ width: '100%', padding: '8px' }} required
                             value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} />
                     </div>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Eligibility</label>
+                    <select style={{ width: '100%', padding: '8px' }} value={form.eligibility} onChange={e => setForm({ ...form, eligibility: e.target.value })}>
+                        <option value="all">Open to Everyone</option>
+                        <option value="iiit-only">IIIT Students Only</option>
+                    </select>
+                </div>
+
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px' }}>Tags (comma separated)</label>
+                    <input type="text" placeholder="e.g. music, cultural, dance" style={{ width: '100%', padding: '8px' }}
+                        value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} />
+                    <small style={{ color: '#777' }}>Helps participants find your event based on their interests</small>
                 </div>
 
                 {/* Normal Event Specific Fields */}
@@ -252,10 +273,16 @@ export default function CreateEvent() {
                     </div>
                 )}
 
-                <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px', display: 'flex', gap: '15px' }}>
                     <button type="submit" disabled={submitting}
+                        onClick={() => setPublishNow(false)}
                         style={{ padding: '10px 20px', fontSize: '16px', background: '#337ab7', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                        {submitting ? 'Creating...' : 'Create Event Draft'}
+                        {submitting && !publishNow ? 'Saving...' : 'Save as Draft'}
+                    </button>
+                    <button type="submit" disabled={submitting}
+                        onClick={() => setPublishNow(true)}
+                        style={{ padding: '10px 20px', fontSize: '16px', background: '#5cb85c', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                        {submitting && publishNow ? 'Publishing...' : 'Publish Now'}
                     </button>
                 </div>
             </form>

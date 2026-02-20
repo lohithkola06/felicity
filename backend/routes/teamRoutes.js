@@ -8,7 +8,7 @@ const generateTicket = require('../utils/generateTicket');
 
 const router = express.Router();
 
-// create a team for a hackathon event
+// create a team for a normal event
 router.post('/:eventId/create', auth, authorize('participant'), async (req, res) => {
     try {
         const event = await Event.findById(req.params.eventId);

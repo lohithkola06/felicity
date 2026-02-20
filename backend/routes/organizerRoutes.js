@@ -10,6 +10,25 @@ router.use(auth, authorize('organizer'));
 router.get('/dashboard', async (req, res) => {
     try {
         const events = await Event.find({ organizer: req.user._id }).sort('-createdAt');
+
+        // Auto-update event statuses based on current time before computing stats
+        const now = new Date();
+        const bulkOps = [];
+        for (const e of events) {
+            let newStatus = null;
+            if (e.status === 'published' && e.startDate && new Date(e.startDate) <= now) {
+                newStatus = 'ongoing';
+            }
+            if ((e.status === 'ongoing' || newStatus === 'ongoing') && e.endDate && new Date(e.endDate) <= now) {
+                newStatus = 'completed';
+            }
+            if (newStatus && newStatus !== e.status) {
+                bulkOps.push({ updateOne: { filter: { _id: e._id }, update: { $set: { status: newStatus } } } });
+                e.status = newStatus;
+            }
+        }
+        if (bulkOps.length > 0) await Event.bulkWrite(bulkOps);
+
         const eventIds = events.map(e => e._id);
         const registrations = await Registration.find({ event: { $in: eventIds } });
 

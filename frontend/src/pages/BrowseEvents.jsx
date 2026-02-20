@@ -61,7 +61,6 @@ export default function BrowseEvents() {
                             <option value="">All Types</option>
                             <option value="normal">Normal Event</option>
                             <option value="merchandise">Merchandise</option>
-                            <option value="hackathon">Hackathon</option>
                         </select>
                     </div>
 
@@ -70,8 +69,7 @@ export default function BrowseEvents() {
                         <select value={eligibility} onChange={e => setEligibility(e.target.value)}>
                             <option value="">Any</option>
                             <option value="all">Everyone</option>
-                            <option value="iiit">IIIT Only</option>
-                            <option value="non-iiit">Non-IIIT</option>
+                            <option value="iiit-only">IIIT Only</option>
                         </select>
                     </div>
 

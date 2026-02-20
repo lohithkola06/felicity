@@ -17,9 +17,7 @@ app.set('io', io);
 app.use(cors());
 app.use(express.json());
 
-// connect to mongodb
 const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
-
 mongoose.connect(process.env.MONGODB_URI, clientOptions)
     .then(() => console.log('connected to mongodb'))
     .catch(err => {
@@ -30,8 +28,6 @@ mongoose.connect(process.env.MONGODB_URI, clientOptions)
 app.get('/', (req, res) => {
     res.send('fest management api');
 });
-
-// reCAPTCHA v2 is handled client-side; verification happens in auth middleware
 
 // routes
 app.use('/api/auth', require('./routes/authRoutes'));
