@@ -24,6 +24,7 @@ router.get('/dashboard', async (req, res) => {
 
             const entry = {
                 registrationId: r._id,
+                eventId: r.event._id,
                 eventName: r.event.name,
                 eventType: r.event.type,
                 organizer: r.event.organizer?.organizerName || 'Unknown',

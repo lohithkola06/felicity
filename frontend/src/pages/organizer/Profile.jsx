@@ -12,12 +12,14 @@ export default function OrgProfile() {
         contactNumber: '',
         discordWebhook: '',
     });
+    const [loginEmail, setLoginEmail] = useState('');
     const [status, setStatus] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         api.get('/organizer/profile').then(res => {
             const u = res.data.user || res.data;
+            setLoginEmail(u.email || '');
             setForm({
                 organizerName: u.organizerName || '',
                 category: u.category || '',
@@ -60,6 +62,15 @@ export default function OrgProfile() {
             )}
 
             <form onSubmit={save}>
+                {/* Login Email - Non-editable */}
+                <div style={{ marginBottom: '15px' }}>
+                    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Login Email</label>
+                    <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px', color: '#888', border: '1px solid #e0e0e0' }}>
+                        {loginEmail}
+                    </div>
+                    <small style={{ color: '#999' }}>Login email cannot be changed</small>
+                </div>
+
                 <div style={{ marginBottom: '15px' }}>
                     <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Organization / Club Name</label>
                     <input type="text" value={form.organizerName}
@@ -106,7 +117,7 @@ export default function OrgProfile() {
                         onChange={e => setForm({ ...form, discordWebhook: e.target.value })}
                         style={{ width: '100%', padding: '8px' }}
                         placeholder="https://discord.com/api/webhooks/..." />
-                    <small style={{ color: '#777' }}>Used for event notifications in your Discord server</small>
+                    <small style={{ color: '#777' }}>When you publish a new event, it will be automatically posted to your Discord server via this webhook</small>
                 </div>
 
                 <button type="submit" style={{

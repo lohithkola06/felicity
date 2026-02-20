@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 
 /**
@@ -10,10 +11,11 @@ import api from '../api/axios';
  * - Differentiates between 'IIIT' and 'Non-IIIT' participants.
  * - Enforces IIIT email domain validation.
  * - Collects necessary contact info for event coordination.
+ * - Auto-logs in and redirects to onboarding after signup.
  */
 export default function Register() {
     const navigate = useNavigate();
-
+    const { setUser } = useAuth();
 
     // Feedback state
     const [statusMessage, setStatusMessage] = useState(null);
@@ -25,20 +27,16 @@ export default function Register() {
         lastName: '',
         email: '',
         password: '',
-        participantType: 'iiit', // Default to IIIT as it's the primary audience
-        collegeName: 'IIIT Hyderabad', // Pre-filled for IIIT
+        participantType: 'iiit',
+        collegeName: 'IIIT Hyderabad',
         contactNumber: '',
     });
 
-    /**
-     * Handles form submission.
-     */
     async function handleRegister(e) {
         e.preventDefault();
 
-        // Basic Client-side Validation
         if (formData.participantType === 'iiit') {
-            if (!formData.email.match(/@(students\.)?iiit\.ac\.in$/i)) {
+            if (!formData.email.match(/@(students\.|research\.)?iiit\.ac\.in$/i)) {
                 setStatusMessage({ type: 'error', text: 'Please use your official IIIT email address (@iiit.ac.in).' });
                 return;
             }
@@ -48,13 +46,16 @@ export default function Register() {
         setStatusMessage(null);
 
         try {
-            await api.post('/auth/register', formData);
+            const res = await api.post('/auth/register', formData);
+            const { token, user } = res.data;
 
-            setStatusMessage({ type: 'success', text: 'Welcome aboard! Redirecting you to the login page...' });
+            // Auto-login: store token and user
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
+            setUser(user);
 
-            // Redirect to login after a brief pause
-            setTimeout(() => navigate('/login'), 2000);
-
+            setStatusMessage({ type: 'success', text: 'Welcome aboard! Setting up your preferences...' });
+            setTimeout(() => navigate('/onboarding'), 1000);
         } catch (err) {
             console.error(err);
             setStatusMessage({ type: 'error', text: err.response?.data?.error || 'Registration failed. Please try again.' });

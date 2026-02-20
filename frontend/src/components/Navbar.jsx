@@ -17,7 +17,7 @@ export default function Navbar() {
 
                 <ul style={{ display: 'flex', gap: '15px', listStyle: 'none', margin: 0, padding: 0 }}>
                     <li><Link to="/events" style={{ color: '#ccc' }}>Browse Events</Link></li>
-                    <li><Link to="/clubs" style={{ color: '#ccc' }}>Clubs</Link></li>
+                    <li><Link to="/clubs" style={{ color: '#ccc' }}>Clubs/Organizers</Link></li>
 
                     {user ? (
                         <>
@@ -26,7 +26,7 @@ export default function Navbar() {
                                     <li><Link to="/organizer/dashboard" style={{ color: '#ccc' }}>Dashboard</Link></li>
                                     <li><Link to="/organizer/events/new" style={{ color: '#ccc' }}>Create Event</Link></li>
                                     <li><Link to="/organizer/profile" style={{ color: '#ccc' }}>Profile</Link></li>
-                                    <li><Link to="/organizer/password-reset" style={{ color: '#ccc' }}>Password Reset</Link></li>
+                                    <li><Link to="/events?status=ongoing" style={{ color: '#ccc' }}>Ongoing Events</Link></li>
                                 </>
                             )}
                             {user.role === 'participant' && (

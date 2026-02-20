@@ -49,15 +49,18 @@ export default function BrowseEvents() {
             <p>Find and register for happenings on campus.</p>
 
             {/* Search and Filters */}
-            <div style={{ background: '#eee', padding: '15px', border: '1px solid #ccc', marginBottom: '20px' }}>
-                <div style={{ marginBottom: '10px' }}>
-                    <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search events..." style={{ width: '100%', padding: '8px' }} />
+            <div style={{ background: '#fff', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '20px' }}>
+                <div style={{ marginBottom: '12px' }}>
+                    <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+                        placeholder="🔍 Search events or organizers (partial & fuzzy matching)..."
+                        style={{ width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                     <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>Type:</strong>
-                        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold', color: '#666' }}>Event Type</label>
+                        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}
+                            style={{ padding: '6px 10px', border: '1px solid #ccc', borderRadius: '4px' }}>
                             <option value="">All Types</option>
                             <option value="normal">Normal Event</option>
                             <option value="merchandise">Merchandise</option>
@@ -65,8 +68,9 @@ export default function BrowseEvents() {
                     </div>
 
                     <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>Eligibility:</strong>
-                        <select value={eligibility} onChange={e => setEligibility(e.target.value)}>
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold', color: '#666' }}>Eligibility</label>
+                        <select value={eligibility} onChange={e => setEligibility(e.target.value)}
+                            style={{ padding: '6px 10px', border: '1px solid #ccc', borderRadius: '4px' }}>
                             <option value="">Any</option>
                             <option value="all">Everyone</option>
                             <option value="iiit-only">IIIT Only</option>
@@ -74,46 +78,97 @@ export default function BrowseEvents() {
                     </div>
 
                     <div>
-                        <strong style={{ display: 'block', marginBottom: '5px' }}>Date Range:</strong>
-                        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} /> to <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                        <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', fontWeight: 'bold', color: '#666' }}>Date Range</label>
+                        <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                                style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                            <span style={{ color: '#888' }}>to</span>
+                            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                                style={{ padding: '5px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                        </div>
                     </div>
                 </div>
 
-                <div style={{ marginTop: '10px', display: 'flex', gap: '15px' }}>
-                    <label>
-                        <input type="checkbox" checked={trending} onChange={e => setTrending(e.target.checked)} /> Show Trending Top 5
+                <div style={{ marginTop: '12px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px' }}>
+                        <input type="checkbox" checked={trending} onChange={e => setTrending(e.target.checked)} />
+                        🔥 Trending (Top 5)
                     </label>
                     {user && user.role === 'participant' && (
-                        <label>
-                            <input type="checkbox" checked={followedOnly} onChange={e => setFollowedOnly(e.target.checked)} /> Followed Clubs Only
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px' }}>
+                            <input type="checkbox" checked={followedOnly} onChange={e => setFollowedOnly(e.target.checked)} />
+                            ⭐ Followed Clubs Only
                         </label>
                     )}
                 </div>
             </div>
 
+            {/* Trending Banner */}
+            {trending && !loading && events.length > 0 && (
+                <div style={{ padding: '10px 15px', marginBottom: '15px', background: '#fff3e0', border: '1px solid #ffe0b2', borderRadius: '4px', fontSize: '13px', color: '#e65100' }}>
+                    🔥 Showing <strong>Top 5 Trending</strong> events by registration count
+                </div>
+            )}
+
             {/* Event List */}
             {loading ? (
                 <p>Loading events...</p>
             ) : events.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>
+                <div style={{ textAlign: 'center', padding: '40px', background: '#fff', border: '1px solid #ddd', borderRadius: '8px' }}>
                     <h3>No Events Found</h3>
-                    <p>Try adjusting your search filters.</p>
+                    <p style={{ color: '#888' }}>Try adjusting your search filters.</p>
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                     {events.map((event) => (
-                        <div key={event._id} style={{ border: '1px solid #ccc', padding: '15px', background: '#fff', borderRadius: '4px' }}>
-                            <div style={{ marginBottom: '10px' }}>
-                                <span style={{ background: '#eee', padding: '3px 8px', borderRadius: '3px', fontSize: '12px', marginRight: '5px', textTransform: 'capitalize' }}>{event.type}</span>
-                                <span style={{ fontSize: '12px', color: event.status === 'published' ? 'green' : 'gray' }}>
-                                    {event.status === 'published' ? 'Live' : event.status}
-                                </span>
+                        <div key={event._id} style={{ border: '1px solid #ddd', padding: '20px', background: '#fff', borderRadius: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                    <span style={{
+                                        padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+                                        background: event.type === 'merchandise' ? '#fce4ec' : '#e3f2fd',
+                                        color: event.type === 'merchandise' ? '#c62828' : '#1565c0',
+                                        textTransform: 'capitalize'
+                                    }}>
+                                        {event.type === 'merchandise' ? '🛍️ Merch' : '📅 Event'}
+                                    </span>
+                                    <span style={{
+                                        padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+                                        background: event.status === 'published' ? '#e8f5e9' : '#e3f2fd',
+                                        color: event.status === 'published' ? '#2e7d32' : '#1565c0',
+                                    }}>
+                                        {event.status === 'published' ? '🟢 Live' : event.status}
+                                    </span>
+                                </div>
+                                {event.registrationFee > 0 ? (
+                                    <span style={{ fontWeight: 'bold', color: '#333' }}>Rs. {event.registrationFee}</span>
+                                ) : (
+                                    <span style={{ color: '#4caf50', fontWeight: 'bold', fontSize: '12px' }}>FREE</span>
+                                )}
                             </div>
-                            <h3><Link to={`/events/${event._id}`}>{event.name}</Link></h3>
-                            <p style={{ color: '#666', fontSize: '14px', marginBottom: '10px' }}>{event.description}</p>
-                            <div style={{ fontSize: '12px', color: '#888' }}>
-                                {event.startDate ? new Date(event.startDate).toLocaleDateString() : 'Date TBD'}
-                                {event.registrationFee > 0 ? ` | Rs. ${event.registrationFee}` : ' | Free'}
+
+                            <h3 style={{ margin: '0 0 6px 0' }}>
+                                <Link to={`/events/${event._id}`} style={{ textDecoration: 'none', color: '#333' }}>{event.name}</Link>
+                            </h3>
+
+                            {/* Organizer Name */}
+                            {event.organizer && (
+                                <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                                    by <strong>{event.organizer.organizerName || 'Unknown'}</strong>
+                                    {event.organizer.category && <span style={{ marginLeft: '6px', color: '#999' }}>({event.organizer.category})</span>}
+                                </div>
+                            )}
+
+                            <p style={{
+                                color: '#666', fontSize: '13px', marginBottom: '10px', lineHeight: '1.4',
+                                overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical'
+                            }}>
+                                {event.description}
+                            </p>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#888' }}>
+                                <span>{event.startDate ? new Date(event.startDate).toLocaleDateString() : 'Date TBD'}</span>
+                                <span>{event.registrationCount} registered</span>
                             </div>
                         </div>
                     ))}

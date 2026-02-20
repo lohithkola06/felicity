@@ -18,7 +18,11 @@ export default function Login() {
             const user = await login({ email, password });
             if (user.role === 'admin') navigate('/admin/dashboard');
             else if (user.role === 'organizer') navigate('/organizer/dashboard');
-            else navigate('/dashboard');
+            else {
+                // New participants (no interests yet) go to onboarding
+                const needsOnboarding = !user.interests || user.interests.length === 0;
+                navigate(needsOnboarding ? '/onboarding' : '/dashboard');
+            }
         } catch (err) {
             setError(err.response?.data?.error || 'Login failed');
         }

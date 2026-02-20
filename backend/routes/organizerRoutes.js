@@ -87,7 +87,21 @@ router.get('/events/:id/analytics', async (req, res) => {
         if (!event) return res.status(404).json({ error: 'event not found' });
 
         const regs = await Registration.find({ event: event._id });
-        const attended = regs.filter(r => r.status === 'completed').length;
+        const attended = regs.filter(r => r.attended).length;
+
+        // Team completion stats
+        let teamCompletion = 0;
+        try {
+            const Team = require('../models/Team');
+            const teams = await Team.find({ event: event._id });
+            for (const team of teams) {
+                const memberIds = team.members.map(m => m.toString());
+                const memberRegs = regs.filter(r => memberIds.includes(r.participant.toString()));
+                if (memberRegs.length === memberIds.length && memberRegs.every(r => r.attended)) {
+                    teamCompletion++;
+                }
+            }
+        } catch (e) { /* teams not applicable */ }
 
         // for merch events, tally up whats selling
         let itemSales = {};
@@ -105,6 +119,7 @@ router.get('/events/:id/analytics', async (req, res) => {
             status: event.status,
             registrations: regs.length,
             attendance: attended,
+            teamCompletion,
             revenue: regs.length * event.registrationFee,
             registrationLimit: event.registrationLimit,
             ...(event.type === 'merchandise' && { itemSales }),
@@ -118,18 +133,26 @@ router.get('/events/:id/analytics', async (req, res) => {
 // export participants as csv
 router.get('/events/:id/export', async (req, res) => {
     try {
+        // Support token via query param for direct browser download
+        if (req.query.token && !req.headers.authorization) {
+            req.headers.authorization = `Bearer ${req.query.token}`;
+        }
+
         const event = await Event.findOne({ _id: req.params.id, organizer: req.user._id });
         if (!event) return res.status(404).json({ error: 'event not found' });
 
         const regs = await Registration.find({ event: event._id })
-            .populate('participant', 'firstName lastName email contactNumber collegeName');
+            .populate('participant', 'firstName lastName email contactNumber collegeName')
+            .populate('team', 'name');
 
-        let csv = 'Name,Email,College,Contact,Registration Date,Payment Status,Ticket ID,Status\n';
+        let csv = 'Name,Email,College,Contact,Registration Date,Payment Status,Ticket ID,Team,Attendance,Status\n';
         for (const r of regs) {
             const p = r.participant;
             const name = p ? `${p.firstName || ''} ${p.lastName || ''}`.trim() : 'Unknown';
             const date = r.registeredAt ? r.registeredAt.toISOString().split('T')[0] : '';
-            csv += `"${name}","${p?.email || ''}","${p?.collegeName || ''}","${p?.contactNumber || ''}","${date}","${r.paymentStatus}","${r.ticketId}","${r.status}"\n`;
+            const teamName = r.team?.name || '';
+            const attended = r.attended ? 'Yes' : 'No';
+            csv += `"${name}","${p?.email || ''}","${p?.collegeName || ''}","${p?.contactNumber || ''}","${date}","${r.paymentStatus}","${r.ticketId}","${teamName}","${attended}","${r.status}"\n`;
         }
 
         res.setHeader('Content-Type', 'text/csv');
