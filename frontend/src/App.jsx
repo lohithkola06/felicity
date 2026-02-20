@@ -27,6 +27,7 @@ import PasswordReset from './pages/organizer/PasswordReset';
 
 // Admin
 import AdminDashboard from './pages/admin/Dashboard';
+import AdminClubsOrganizers from './pages/admin/ClubsOrganizers';
 
 import { useAuth } from './context/AuthContext';
 
@@ -75,6 +76,11 @@ export default function App() {
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
+
+          {/* Dev-only: Admin Clubs & Organizers view */}
+          {import.meta.env.DEV && (
+            <Route path="/admin/clubs" element={<ProtectedRoute role="admin"><AdminClubsOrganizers /></ProtectedRoute>} />
+          )}
         </Routes>
       </div>
     </BrowserRouter>

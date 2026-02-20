@@ -18,12 +18,6 @@ export default function OrgEventDetail() {
             <p>Status: {event.status}</p>
             <p>Registrations: {event.registrationCount}</p>
             <p>Revenue: Rs. {event.revenue || 0}</p>
-
-            {/* Analytics placeholders */}
-            <div style={{ marginTop: '20px', border: '1px solid #ccc', padding: '10px' }}>
-                <h3>Analytics</h3>
-                <p>Data visualization would go here in a complex app. For now, enjoy the stats above.</p>
-            </div>
         </div>
     );
 }

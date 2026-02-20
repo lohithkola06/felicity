@@ -5,9 +5,11 @@ import { useAuth } from '../../context/AuthContext';
 export default function AdminDashboard() {
     const [organizers, setOrganizers] = useState([]);
     const [resetRequests, setResetRequests] = useState([]);
-    const [form, setForm] = useState({ organizerName: '', contactEmail: '', password: '', category: 'Technical' });
+    const [form, setForm] = useState({ organizerName: '', contactEmail: '', category: 'Technical', description: '' });
     const [confirmAction, setConfirmAction] = useState(null);
     const [activeTab, setActiveTab] = useState('organizers');
+    const [generatedCreds, setGeneratedCreds] = useState(null);
+    const [creating, setCreating] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -34,12 +36,20 @@ export default function AdminDashboard() {
 
     async function createOrganizer(e) {
         e.preventDefault();
+        setCreating(true);
+        setGeneratedCreds(null);
         try {
-            await api.post('/admin/create-organizer', form);
+            const res = await api.post('/admin/create-organizer', form);
             fetchData();
-            setForm({ organizerName: '', contactEmail: '', password: '', category: 'Technical' });
+            setForm({ organizerName: '', contactEmail: '', category: 'Technical', description: '' });
+            // Show generated credentials so admin can share them
+            if (res.data.credentials) {
+                setGeneratedCreds(res.data.credentials);
+            }
         } catch (err) {
             alert(err.response?.data?.error || 'Failed');
+        } finally {
+            setCreating(false);
         }
     }
 
@@ -118,19 +128,40 @@ export default function AdminDashboard() {
             {activeTab === 'organizers' && (
                 <>
                     <div style={{ border: '1px solid #ccc', padding: '20px', background: '#f9f9f9', marginBottom: '30px' }}>
-                        <h3>Add New Organizer</h3>
-                        <form onSubmit={createOrganizer} style={{ display: 'flex', gap: '10px' }}>
-                            <input type="text" placeholder="Name" value={form.organizerName} onChange={e => setForm({ ...form, organizerName: e.target.value })} required />
-                            <input type="email" placeholder="Email (@iiit.ac.in)" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} required />
-                            <input type="password" placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
-                            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                                <option>Technical</option>
-                                <option>Cultural</option>
-                                <option>Sports</option>
-                                <option>Other</option>
-                            </select>
-                            <button type="submit">Create</button>
+                        <h3>Add New Club / Organizer</h3>
+                        <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>The system will auto-generate login credentials. Share them with the organizer after creation.</p>
+                        <form onSubmit={createOrganizer}>
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                <input type="text" placeholder="Club / Organizer Name" value={form.organizerName} onChange={e => setForm({ ...form, organizerName: e.target.value })} style={{ flex: 2, padding: '8px' }} required />
+                                <input type="email" placeholder="Email (@iiit.ac.in)" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} style={{ flex: 2, padding: '8px' }} required />
+                                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ flex: 1, padding: '8px' }}>
+                                    <option>Technical</option>
+                                    <option>Cultural</option>
+                                    <option>Sports</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <input type="text" placeholder="Description (optional)" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} style={{ flex: 1, padding: '8px' }} />
+                                <button type="submit" disabled={creating} style={{ padding: '8px 20px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                                    {creating ? 'Creating...' : 'Create Organizer'}
+                                </button>
+                            </div>
                         </form>
+
+                        {generatedCreds && (
+                            <div style={{ marginTop: '15px', padding: '15px', background: '#dff0d8', border: '1px solid #d6e9c6', borderRadius: '4px' }}>
+                                <h4 style={{ margin: '0 0 8px', color: '#3c763d' }}>Account Created — Share These Credentials</h4>
+                                <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Login Email:</strong> {generatedCreds.email}</p>
+                                <p style={{ margin: '4px 0', fontSize: '14px' }}><strong>Password:</strong> <code style={{ background: '#eee', padding: '2px 6px', borderRadius: '3px', fontSize: '14px', userSelect: 'all' }}>{generatedCreds.password}</code></p>
+                                <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#666' }}>The organizer can log in immediately with these credentials. Please share them securely.</p>
+                                <button onClick={() => {
+                                    navigator.clipboard.writeText(`Email: ${generatedCreds.email}\nPassword: ${generatedCreds.password}`);
+                                    alert('Credentials copied to clipboard!');
+                                }} style={{ marginTop: '8px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer' }}>Copy to Clipboard</button>
+                                <button onClick={() => setGeneratedCreds(null)} style={{ marginTop: '8px', marginLeft: '8px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', background: 'none', border: '1px solid #ccc' }}>Dismiss</button>
+                            </div>
+                        )}
                     </div>
 
                     {confirmAction && (

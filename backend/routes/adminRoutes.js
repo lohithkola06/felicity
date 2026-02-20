@@ -10,12 +10,13 @@ router.use(auth, authorize('admin'));
 
 // POST /api/admin/create-organizer
 // admin creates a new club/organizer account
+// System auto-generates login credentials; admin receives them to share.
 router.post('/create-organizer', async (req, res) => {
     try {
-        const { organizerName, category, description, contactEmail, password } = req.body;
+        const { organizerName, category, description, contactEmail } = req.body;
 
-        if (!organizerName || !category || !contactEmail || !password) {
-            return res.status(400).json({ error: 'All fields are required' });
+        if (!organizerName || !category || !contactEmail) {
+            return res.status(400).json({ error: 'Organizer name, category, and contact email are required.' });
         }
 
         // Strict Email Validation: Organizers must be IIIT domain
@@ -29,9 +30,12 @@ router.post('/create-organizer', async (req, res) => {
             return res.status(400).json({ error: `Email ${contactEmail} is already taken` });
         }
 
+        // Auto-generate a secure password
+        const generatedPassword = crypto.randomBytes(10).toString('hex');
+
         const organizer = new User({
             email: contactEmail,
-            password: password,
+            password: generatedPassword,
             role: 'organizer',
             organizerName,
             category,
@@ -43,6 +47,10 @@ router.post('/create-organizer', async (req, res) => {
         res.status(201).json({
             message: 'Organizer created successfully',
             organizer,
+            credentials: {
+                email: contactEmail,
+                password: generatedPassword,
+            },
         });
     } catch (err) {
         console.log(err);

@@ -158,6 +158,39 @@ router.put('/:id', auth, authorize('organizer'), async (req, res) => {
 });
 
 // -------------------------------------------------------------------------
+// DELETE /api/events/:id
+// -------------------------------------------------------------------------
+// Delete an event and all associated data (registrations, teams, chat, feedback).
+// Only the organizer who owns the event can delete it.
+// Events that are currently ongoing cannot be deleted.
+router.delete('/:id', auth, authorize('organizer'), async (req, res) => {
+    try {
+        const event = await Event.findOne({ _id: req.params.id, organizer: req.user._id });
+        if (!event) return res.status(404).json({ error: 'Event not found.' });
+
+        if (event.status === 'ongoing') {
+            return res.status(400).json({ error: 'Cannot delete an event that is currently ongoing. Close it first.' });
+        }
+
+        const Team = require('../models/Team');
+        const ChatMessage = require('../models/ChatMessage');
+        const Feedback = require('../models/Feedback');
+
+        // Cascade delete all associated data
+        await Registration.deleteMany({ event: event._id });
+        await Team.deleteMany({ event: event._id });
+        await ChatMessage.deleteMany({ event: event._id });
+        await Feedback.deleteMany({ event: event._id });
+        await Event.findByIdAndDelete(event._id);
+
+        res.json({ message: 'Event and all associated data deleted successfully.' });
+    } catch (err) {
+        console.error('Delete Event Error:', err);
+        res.status(500).json({ error: 'Failed to delete the event.' });
+    }
+});
+
+// -------------------------------------------------------------------------
 // PATCH /api/events/:id/status
 // -------------------------------------------------------------------------
 // Manage the lifecycle of an event (Draft -> Published -> Ongoing -> Closed).

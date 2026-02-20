@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
 export default function OrganizerDashboard() {
     const [events, setEvents] = useState([]);
     const [stats, setStats] = useState({ totalEvents: 0, activeEvents: 0, totalRegistrations: 0, totalRevenue: 0, totalAttendance: 0 });
     const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchData();
@@ -22,6 +24,19 @@ export default function OrganizerDashboard() {
             console.error(err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDelete = async (eventId, eventName) => {
+        if (!window.confirm(`Are you sure you want to delete "${eventName}"? This will remove all registrations, teams, and feedback. This action cannot be undone.`)) return;
+        setDeleting(eventId);
+        try {
+            await api.delete(`/events/${eventId}`);
+            fetchData();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Failed to delete event');
+        } finally {
+            setDeleting(null);
         }
     };
 
@@ -87,9 +102,24 @@ export default function OrganizerDashboard() {
                                     </td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>{e.registrationCount}</td>
                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                        {e.status === 'draft' && <Link to={`/organizer/events/${e._id}/edit`} style={{ marginRight: '10px' }}>Edit</Link>}
+                                        {['draft', 'published'].includes(e.status) && (
+                                            <Link to={`/organizer/events/${e._id}/edit`} style={{ marginRight: '10px', color: '#337ab7' }}>Edit</Link>
+                                        )}
                                         <Link to={`/organizer/events/${e._id}/attendance`} style={{ marginRight: '10px' }}>Attendance</Link>
-                                        <Link to={`/organizer/events/${e._id}/feedback`}>Feedback</Link>
+                                        <Link to={`/organizer/events/${e._id}/feedback`} style={{ marginRight: '10px' }}>Feedback</Link>
+                                        {e.status !== 'ongoing' && (
+                                            <button
+                                                onClick={() => handleDelete(e._id, e.name)}
+                                                disabled={deleting === e._id}
+                                                style={{
+                                                    background: 'none', border: 'none', color: '#d9534f',
+                                                    cursor: 'pointer', fontSize: '14px', padding: 0,
+                                                    textDecoration: 'underline'
+                                                }}
+                                            >
+                                                {deleting === e._id ? 'Deleting...' : 'Delete'}
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

@@ -37,7 +37,9 @@ export default function Navbar() {
                                 </>
                             )}
                             {user.role === 'admin' && (
-                                <li><Link to="/admin/dashboard" style={{ color: '#ccc' }}>Dashboard</Link></li>
+                                <>
+                                    <li><Link to="/admin/dashboard" style={{ color: '#ccc' }}>Dashboard</Link></li>
+                                </>
                             )}
                             <li><button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', textDecoration: 'underline' }}>Logout</button></li>
                         </>
