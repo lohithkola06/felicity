@@ -13,10 +13,26 @@ async function seed() {
     const email = process.env.ADMIN_EMAIL || 'admin@iiit.ac.in';
     const password = process.env.ADMIN_PASSWORD || 'admin123';
 
-    const existing = await User.findOne({ email });
-    if (existing) {
-        console.log('admin already exists, nothing to do');
+    // Check if an admin account already exists (any email)
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (existingAdmin) {
+        // Update email/password if they changed
+        if (existingAdmin.email !== email) {
+            existingAdmin.email = email;
+            existingAdmin.password = password;
+            await existingAdmin.save();
+            console.log('admin email updated to:', email);
+        } else {
+            console.log('admin already exists with correct email, nothing to do');
+        }
         process.exit(0);
+    }
+
+    // Also check if this specific email is taken by a non-admin
+    const existingEmail = await User.findOne({ email });
+    if (existingEmail) {
+        console.log('email already taken by a non-admin user');
+        process.exit(1);
     }
 
     await User.create({ email, password, role: 'admin' });
