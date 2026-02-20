@@ -6,10 +6,11 @@ require('dotenv').config();
 const User = require('../models/User');
 
 async function seed() {
-    await mongoose.connect(process.env.MONGODB_URI);
+    const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+    await mongoose.connect(process.env.MONGODB_URI, clientOptions);
     console.log('connected to db');
 
-    const email = process.env.ADMIN_EMAIL || 'admin@felicity.iiit.ac.in';
+    const email = process.env.ADMIN_EMAIL || 'admin@iiit.ac.in';
     const password = process.env.ADMIN_PASSWORD || 'admin123';
 
     const existing = await User.findOne({ email });

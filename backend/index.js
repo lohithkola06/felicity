@@ -18,7 +18,9 @@ app.use(cors());
 app.use(express.json());
 
 // connect to mongodb
-mongoose.connect(process.env.MONGODB_URI)
+const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true } };
+
+mongoose.connect(process.env.MONGODB_URI, clientOptions)
     .then(() => console.log('connected to mongodb'))
     .catch(err => {
         console.log('db connection failed:', err.message);

@@ -18,7 +18,7 @@ services:
       - key: CLIENT_URL 
         sync: false
       - key: ADMIN_EMAIL
-        value: admin@felicity.iiit.ac.in
+        value: admin@iiit.ac.in
       - key: ADMIN_PASSWORD
         sync: false
 

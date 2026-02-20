@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 export default function AdminDashboard() {
     const [organizers, setOrganizers] = useState([]);
     const [stats, setStats] = useState({});
-    const [form, setForm] = useState({ name: '', email: '', category: 'Technical' });
-    const [createdCreds, setCreatedCreds] = useState(null);
+    const [form, setForm] = useState({ organizerName: '', contactEmail: '', password: '', category: 'Technical' });
+    const [confirmAction, setConfirmAction] = useState(null);
 
     useEffect(() => {
         fetchData();
@@ -25,30 +25,37 @@ export default function AdminDashboard() {
     async function createOrganizer(e) {
         e.preventDefault();
         try {
-            const res = await api.post('/admin/create-organizer', form);
-            setCreatedCreds(res.data);
+            await api.post('/admin/create-organizer', form);
             fetchData();
-            setForm({ name: '', email: '', category: 'Technical' });
+            setForm({ organizerName: '', contactEmail: '', password: '', category: 'Technical' });
         } catch (err) {
             alert(err.response?.data?.error || 'Failed');
         }
     }
 
-    async function deleteOrganizer(id) {
-        if (!confirm('Permanently delete?')) return;
+    async function handleConfirm() {
+        if (!confirmAction) return;
+        const { id, action } = confirmAction;
         try {
-            await api.delete(`/admin/organizers/${id}`);
+            if (action === 'delete') {
+                await api.delete(`/admin/organizers/${id}`);
+            } else if (action === 'archive' || action === 'unarchive') {
+                await api.patch(`/admin/organizers/${id}/archive`);
+            }
             fetchData();
-        } catch (e) { alert('Failed'); }
+            setConfirmAction(null);
+        } catch (e) {
+            alert('Action failed');
+            setConfirmAction(null);
+        }
     }
 
-    async function toggleArchive(id, currentStatus) {
-        // assume endpoint exists or use delete/archive
-        // The audit report mentioned archive option.
-        try {
-            await api.put(`/admin/organizers/${id}/archive`, { archived: !currentStatus });
-            fetchData();
-        } catch (e) { alert('Failed to toggle archive'); }
+    function requestDelete(org) {
+        setConfirmAction({ id: org._id, action: 'delete', name: org.organizerName });
+    }
+
+    function requestToggleArchive(org) {
+        setConfirmAction({ id: org._id, action: org.isArchived ? 'unarchive' : 'archive', name: org.organizerName });
     }
 
     return (
@@ -58,8 +65,9 @@ export default function AdminDashboard() {
             <div style={{ border: '1px solid #ccc', padding: '20px', background: '#f9f9f9', marginBottom: '30px' }}>
                 <h3>Add New Organizer</h3>
                 <form onSubmit={createOrganizer} style={{ display: 'flex', gap: '10px' }}>
-                    <input type="text" placeholder="Name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
-                    <input type="email" placeholder="Email (will be login)" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required />
+                    <input type="text" placeholder="Name" value={form.organizerName} onChange={e => setForm({ ...form, organizerName: e.target.value })} required />
+                    <input type="email" placeholder="Email (@iiit.ac.in)" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} required />
+                    <input type="password" placeholder="Password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required />
                     <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
                         <option>Technical</option>
                         <option>Cultural</option>
@@ -68,12 +76,20 @@ export default function AdminDashboard() {
                     </select>
                     <button type="submit">Create</button>
                 </form>
-                {createdCreds && (
-                    <div style={{ marginTop: '10px', padding: '10px', background: '#dff0d8', color: '#3c763d' }}>
-                        <strong>Created!</strong> Password: {createdCreds.password}
-                    </div>
-                )}
             </div>
+
+            {confirmAction && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', padding: '20px', borderRadius: '4px', maxWidth: '400px', width: '100%' }}>
+                        <h3>Confirm Action</h3>
+                        <p>Are you sure you want to <strong>{confirmAction.action}</strong> organizer "{confirmAction.name}"?</p>
+                        <div style={{ display: 'flex', gap: '10px', marginTop: '20px', justifyContent: 'flex-end' }}>
+                            <button onClick={() => setConfirmAction(null)}>Cancel</button>
+                            <button onClick={handleConfirm} style={{ background: confirmAction.action === 'delete' ? 'red' : 'blue', color: 'white' }}>Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <h3>Manage Organizers</h3>
             <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
@@ -89,15 +105,15 @@ export default function AdminDashboard() {
                 <tbody>
                     {organizers.map(org => (
                         <tr key={org._id} style={{ borderBottom: '1px solid #ddd' }}>
-                            <td style={{ padding: '10px' }}>{org.name}</td>
+                            <td style={{ padding: '10px' }}>{org.organizerName}</td>
                             <td style={{ padding: '10px' }}>{org.email}</td>
                             <td style={{ padding: '10px' }}>{org.category}</td>
                             <td style={{ padding: '10px' }}>{org.isArchived ? 'Archived' : 'Active'}</td>
                             <td style={{ padding: '10px' }}>
-                                <button onClick={() => toggleArchive(org._id, org.isArchived)} style={{ marginRight: '5px' }}>
+                                <button onClick={() => requestToggleArchive(org)} style={{ marginRight: '5px' }}>
                                     {org.isArchived ? 'Unarchive' : 'Archive'}
                                 </button>
-                                <button onClick={() => deleteOrganizer(org._id)} style={{ color: 'red' }}>Delete</button>
+                                <button onClick={() => requestDelete(org)} style={{ color: 'red' }}>Delete</button>
                             </td>
                         </tr>
                     ))}

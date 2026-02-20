@@ -9,13 +9,13 @@ const router = express.Router();
 router.use(auth, authorize('admin'));
 
 // POST /api/admin/create-organizer
-// admin creates a new club/organizer account and gets the generated credentials back
+// admin creates a new club/organizer account
 router.post('/create-organizer', async (req, res) => {
     try {
-        const { organizerName, category, description, contactEmail } = req.body;
+        const { organizerName, category, description, contactEmail, password } = req.body;
 
-        if (!organizerName || !category || !contactEmail) {
-            return res.status(400).json({ error: 'organizerName, category and contactEmail are required' });
+        if (!organizerName || !category || !contactEmail || !password) {
+            return res.status(400).json({ error: 'All fields are required' });
         }
 
         // Strict Email Validation: Organizers must be IIIT domain
@@ -23,19 +23,15 @@ router.post('/create-organizer', async (req, res) => {
             return res.status(400).json({ error: 'Organizer contact email must be an official @iiit.ac.in address.' });
         }
 
-        // generate login email from the organizer name
-        const loginEmail = organizerName.toLowerCase().replace(/\s+/g, '.') + '@fest.org';
-        const loginPassword = crypto.randomBytes(8).toString('hex');
-
         // make sure this email isnt taken already
-        const existing = await User.findOne({ email: loginEmail });
+        const existing = await User.findOne({ email: contactEmail });
         if (existing) {
-            return res.status(400).json({ error: `Email ${loginEmail} is already taken, try a different name` });
+            return res.status(400).json({ error: `Email ${contactEmail} is already taken` });
         }
 
         const organizer = new User({
-            email: loginEmail,
-            password: loginPassword,
+            email: contactEmail,
+            password: password,
             role: 'organizer',
             organizerName,
             category,
@@ -44,13 +40,8 @@ router.post('/create-organizer', async (req, res) => {
         });
         await organizer.save();
 
-        // send back the credentials so admin can share them with the club
         res.status(201).json({
-            message: 'Organizer created',
-            credentials: {
-                email: loginEmail,
-                password: loginPassword,
-            },
+            message: 'Organizer created successfully',
             organizer,
         });
     } catch (err) {
@@ -102,6 +93,39 @@ router.delete('/organizers/:id', async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'Failed to delete organizer' });
+    }
+});
+
+// TEMPORARY: DELETE /api/admin/dev-reset
+router.delete('/dev-reset', async (req, res) => {
+    try {
+        const Event = require('../models/Event');
+        const Registration = require('../models/Registration');
+        const Team = require('../models/Team');
+        const ChatMessage = require('../models/ChatMessage');
+        const Feedback = require('../models/Feedback');
+
+        const eventsResult = await Event.deleteMany({});
+        const regsResult = await Registration.deleteMany({});
+        const teamsResult = await Team.deleteMany({});
+        const chatsResult = await ChatMessage.deleteMany({});
+        const feedbackResult = await Feedback.deleteMany({});
+        const usersResult = await User.deleteMany({ role: { $ne: 'admin' } });
+
+        res.json({
+            message: 'Database cleared completely.',
+            deleted: {
+                events: eventsResult.deletedCount,
+                registrations: regsResult.deletedCount,
+                teams: teamsResult.deletedCount,
+                chats: chatsResult.deletedCount,
+                feedback: feedbackResult.deletedCount,
+                users: usersResult.deletedCount
+            }
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to clear database' });
     }
 });
 

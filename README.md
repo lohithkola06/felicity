@@ -81,7 +81,7 @@ npm run dev
 JWT_SECRET=your-secret
 MONGODB_URI=mongodb+srv://...
 CLIENT_URL=https://felicity-olive.vercel.app # URL where frontend is hosted
-ADMIN_EMAIL=admin@felicity.iiit.ac.in
+ADMIN_EMAIL=admin@iiit.ac.in
 ADMIN_PASSWORD=admin123
 ```
 
@@ -102,7 +102,7 @@ The frontend runs on `http://localhost:5173` by default.
 
 ### Default Admin Account
 The system seeds a default admin account on first run:
-- Email: `admin@felicity.iiit.ac.in`
+- Email: `admin@iiit.ac.in`
 - Password: `admin123`
 
 ## Project Structure
