@@ -25,7 +25,7 @@ export default function AdminDashboard() {
     async function createOrganizer(e) {
         e.preventDefault();
         try {
-            const res = await api.post('/admin/organizers', form);
+            const res = await api.post('/admin/create-organizer', form);
             setCreatedCreds(res.data);
             fetchData();
             setForm({ name: '', email: '', category: 'Technical' });

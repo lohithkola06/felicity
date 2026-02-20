@@ -10,7 +10,7 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const recaptchaRef = useRef();
+
 
     async function handleSubmit(e) {
         e.preventDefault();

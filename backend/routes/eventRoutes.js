@@ -229,7 +229,7 @@ router.get('/browse', async (req, res) => {
             ];
         }
 
-        if (type) queryFilter.type = type;
+        if (type) queryFilter.type = new RegExp(`^${type}$`, 'i');
         if (eligibility) queryFilter.eligibility = eligibility;
 
         if (startDate || endDate) {

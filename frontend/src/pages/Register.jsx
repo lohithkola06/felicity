@@ -13,7 +13,7 @@ import api from '../api/axios';
  */
 export default function Register() {
     const navigate = useNavigate();
-    const recaptchaRef = useRef();
+
 
     // Feedback state
     const [statusMessage, setStatusMessage] = useState(null);

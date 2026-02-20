@@ -15,7 +15,7 @@ export default function Profile() {
     async function fetchProfile() {
         try {
             const res = await api.get('/participant/profile');
-            setForm(res.data);
+            setForm(res.data.user);
         } catch (e) { console.error(e); }
         setLoading(false);
     }

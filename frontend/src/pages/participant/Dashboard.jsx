@@ -66,11 +66,15 @@ export default function ParticipantDashboard() {
                         ) : filtered.map(reg => (
                             <tr key={reg._id}>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    <Link to={`/events/${reg.event._id}`}>{reg.event.name}</Link>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>{reg.event.type}</div>
+                                    {reg.event ? (
+                                        <>
+                                            <Link to={`/events/${reg.event._id}`}>{reg.event.name}</Link>
+                                            <div style={{ fontSize: '12px', color: '#666' }}>{reg.event.type}</div>
+                                        </>
+                                    ) : <span style={{ color: 'red' }}>Event Deleted</span>}
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                    {new Date(reg.event.startDate).toLocaleDateString()}
+                                    {reg.event ? new Date(reg.event.startDate).toLocaleDateString() : '-'}
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                     {reg.teamName || '-'}
