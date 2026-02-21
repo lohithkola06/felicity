@@ -7,6 +7,7 @@ export default function ParticipantDashboard() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
     const [confirmCancel, setConfirmCancel] = useState(null);
+    const [viewTicket, setViewTicket] = useState(null);
 
     useEffect(() => {
         fetchDashboard();
@@ -130,11 +131,11 @@ export default function ParticipantDashboard() {
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                     {entry.ticketId && (
-                                        <Link to={`/events/${entry.eventId || ''}`}
-                                            style={{ fontSize: '12px', color: '#337ab7', textDecoration: 'underline', cursor: 'pointer' }}
-                                            title="View event & ticket details">
+                                        <button onClick={() => setViewTicket(entry)}
+                                            style={{ display: 'block', fontSize: '13px', color: '#337ab7', textDecoration: 'underline', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+                                            title="View Ticket & QR Code">
                                             {entry.ticketId}
-                                        </Link>
+                                        </button>
                                     )}
                                     {activeTab === 'upcoming' && entry.status !== 'cancelled' && entry.eventType !== 'merchandise' && (
                                         <button onClick={() => promptCancel(entry.registrationId)}
@@ -170,6 +171,39 @@ export default function ParticipantDashboard() {
                                 Yes, Cancel
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Ticket & QR Viewer Modal */}
+            {viewTicket && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: '#fff', padding: '30px', borderRadius: '12px', maxWidth: '350px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+                        <h2 style={{ marginTop: 0, marginBottom: '5px', color: '#333', fontSize: '22px' }}>Your Ticket</h2>
+                        <p style={{ margin: 0, color: '#666', fontSize: '14px', marginBottom: '20px' }}>{viewTicket.eventName}</p>
+
+                        <div style={{ background: '#f9f9f9', padding: '20px', borderRadius: '8px', border: '1px dashed #ccc', marginBottom: '20px' }}>
+                            <div style={{ fontSize: '12px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '5px' }}>Ticket ID</div>
+                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#333', fontFamily: 'monospace', letterSpacing: '2px', marginBottom: '20px' }}>
+                                {viewTicket.ticketId}
+                            </div>
+
+                            {viewTicket.qrCode ? (
+                                <img src={viewTicket.qrCode} alt="QR Code" style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto' }} />
+                            ) : (
+                                <div style={{ width: '200px', height: '200px', background: '#eee', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto', color: '#999', fontSize: '12px' }}>
+                                    No QR Code
+                                </div>
+                            )}
+                        </div>
+
+                        <button onClick={() => setViewTicket(null)}
+                            style={{ width: '100%', padding: '12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>
+                            Close Window
+                        </button>
                     </div>
                 </div>
             )}

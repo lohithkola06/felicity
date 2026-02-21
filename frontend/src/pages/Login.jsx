@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -52,13 +53,25 @@ export default function Login() {
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Password</label>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '8px' }}
-                    />
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={password}
+                            onChange={e => setPassword(e.target.value)}
+                            required
+                            style={{ width: '100%', padding: '8px', paddingRight: '40px' }}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                                background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#666'
+                            }}
+                        >
+                            {showPassword ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
                 </div>
                 <button
                     type="submit"

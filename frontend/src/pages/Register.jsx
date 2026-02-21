@@ -20,6 +20,7 @@ export default function Register() {
     // Feedback state
     const [statusMessage, setStatusMessage] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     // Form Data
     const [formData, setFormData] = useState({
@@ -160,12 +161,24 @@ export default function Register() {
 
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '5px' }}>Password</label>
-                    <input
-                        type="password" required
-                        style={{ width: '100%', padding: '8px' }}
-                        value={formData.password}
-                        onChange={e => setFormData({ ...formData, password: e.target.value })}
-                    />
+                    <div style={{ position: 'relative' }}>
+                        <input
+                            type={showPassword ? 'text' : 'password'} required
+                            style={{ width: '100%', padding: '8px', paddingRight: '40px' }}
+                            value={formData.password}
+                            onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{
+                                position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                                background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#666'
+                            }}
+                        >
+                            {showPassword ? 'Hide' : 'Show'}
+                        </button>
+                    </div>
                 </div>
 
 

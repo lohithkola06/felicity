@@ -14,6 +14,8 @@ export default function Profile() {
     // Password change state
     const [pwForm, setPwForm] = useState({ oldPassword: '', newPassword: '' });
     const [pwMsg, setPwMsg] = useState('');
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     useEffect(() => {
         fetchProfile();
@@ -126,11 +128,29 @@ export default function Profile() {
                 <form onSubmit={changePassword}>
                     <div style={{ marginBottom: '10px' }}>
                         <label>Current Password</label>
-                        <input type="password" value={pwForm.oldPassword} onChange={e => setPwForm({ ...pwForm, oldPassword: e.target.value })} style={{ width: '100%' }} required />
+                        <div style={{ position: 'relative' }}>
+                            <input type={showOldPassword ? "text" : "password"} value={pwForm.oldPassword} onChange={e => setPwForm({ ...pwForm, oldPassword: e.target.value })} style={{ width: '100%', paddingRight: '40px' }} required />
+                            <button
+                                type="button"
+                                onClick={() => setShowOldPassword(!showOldPassword)}
+                                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#666' }}
+                            >
+                                {showOldPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
                     <div style={{ marginBottom: '10px' }}>
                         <label>New Password</label>
-                        <input type="password" value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} style={{ width: '100%' }} required />
+                        <div style={{ position: 'relative' }}>
+                            <input type={showNewPassword ? "text" : "password"} value={pwForm.newPassword} onChange={e => setPwForm({ ...pwForm, newPassword: e.target.value })} style={{ width: '100%', paddingRight: '40px' }} required />
+                            <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: '#666' }}
+                            >
+                                {showNewPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
                     <button type="submit">Change Password</button>
                 </form>

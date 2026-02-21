@@ -32,6 +32,7 @@ router.get('/dashboard', async (req, res) => {
                 endDate: r.event.endDate,
                 status: r.status,
                 ticketId: r.ticketId,
+                qrCode: r.qrCode,
                 teamName: r.team?.name || null,
             };
 
