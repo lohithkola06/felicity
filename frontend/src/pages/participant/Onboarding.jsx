@@ -61,7 +61,7 @@ export default function Onboarding() {
 
             {step === 1 ? (
                 <>
-                    <h1 style={{ marginTop: 0 }}>Welcome! 🎉</h1>
+                    <h1 style={{ marginTop: 0 }}>Welcome!</h1>
                     <p style={{ color: '#555', marginBottom: '20px' }}>
                         Pick the topics you're interested in so we can recommend events that match your tastes.
                     </p>
@@ -101,7 +101,7 @@ export default function Onboarding() {
                 </>
             ) : (
                 <>
-                    <h1 style={{ marginTop: 0 }}>Follow Clubs & Organizers 🏫</h1>
+                    <h1 style={{ marginTop: 0 }}>Follow Clubs & Organizers</h1>
                     <p style={{ color: '#555', marginBottom: '20px' }}>
                         Follow clubs to stay updated on their events. You'll also be able to filter events by followed clubs.
                     </p>
@@ -135,7 +135,7 @@ export default function Onboarding() {
                                         )}
                                     </div>
                                     <span style={{ fontSize: '20px', color: followedIds.includes(club._id) ? '#337ab7' : '#ccc' }}>
-                                        {followedIds.includes(club._id) ? '★' : '☆'}
+                                        {followedIds.includes(club._id) ? '[Following]' : '[Follow]'}
                                     </span>
                                 </div>
                             ))}

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -10,8 +9,6 @@ export default function Login() {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-
-
     async function handleSubmit(e) {
         e.preventDefault();
         try {
@@ -19,7 +16,6 @@ export default function Login() {
             if (user.role === 'admin') navigate('/admin/dashboard');
             else if (user.role === 'organizer') navigate('/organizer/dashboard');
             else {
-                // New participants (no interests yet) go to onboarding
                 const needsOnboarding = !user.interests || user.interests.length === 0;
                 navigate(needsOnboarding ? '/onboarding' : '/dashboard');
             }
@@ -30,20 +26,53 @@ export default function Login() {
 
     return (
         <div style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', border: '1px solid #ccc', background: '#fff' }}>
-            <h2>Login</h2>
-            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            <h2 style={{ textAlign: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Login</h2>
+
+            {error && (
+                <div style={{
+                    padding: '10px', marginBottom: '15px',
+                    background: '#f2dede', color: '#a94442',
+                    border: '1px solid #ebccd1',
+                    borderRadius: '4px', textAlign: 'center'
+                }}>
+                    {error}
+                </div>
+            )}
+
             <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Email</label>
-                    <input type="email" value={email} onChange={e => setEmail(e.target.value)} required style={{ width: '100%' }} />
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '8px' }}
+                    />
                 </div>
                 <div style={{ marginBottom: '15px' }}>
                     <label>Password</label>
-                    <input type="password" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%' }} />
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        required
+                        style={{ width: '100%', padding: '8px' }}
+                    />
                 </div>
-                <button type="submit" style={{ width: '100%' }}>Login</button>
+                <button
+                    type="submit"
+                    style={{
+                        width: '100%', padding: '10px',
+                        background: '#337ab7', color: 'white',
+                        border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px'
+                    }}
+                >
+                    Login
+                </button>
             </form>
-            <p style={{ marginTop: '10px' }}>
+
+            <p style={{ marginTop: '10px', textAlign: 'center' }}>
                 Don't have an account? <Link to="/register">Register here</Link>
             </p>
         </div>

@@ -157,7 +157,7 @@ export default function EditEvent() {
             {/* Info banner for restricted editing */}
             {isPublished && (
                 <div style={{ padding: '10px 15px', marginBottom: '20px', background: '#d9edf7', color: '#31708f', border: '1px solid #bce8f1', borderRadius: '4px', fontSize: '13px' }}>
-                    ℹ️ This event is published. You can only edit the <strong>description</strong>, <strong>extend the registration deadline</strong>, and <strong>increase the registration limit</strong>.
+                    This event is published. You can only edit the <strong>description</strong>, <strong>extend the registration deadline</strong>, and <strong>increase the registration limit</strong>.
                 </div>
             )}
 
@@ -285,7 +285,7 @@ export default function EditEvent() {
                                 <h3 style={{ margin: 0 }}>Custom Registration Form</h3>
                                 {form.formLocked && (
                                     <span style={{ padding: '3px 10px', background: '#f2dede', color: '#a94442', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold' }}>
-                                        🔒 LOCKED (registrations received)
+                                        LOCKED (registrations received)
                                     </span>
                                 )}
                             </div>
@@ -343,7 +343,7 @@ export default function EditEvent() {
                                             <button type="button" onClick={() => moveField(i, 1)} disabled={i === customForm.length - 1}
                                                 style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '3px' }}>↓</button>
                                             <button type="button" onClick={() => removeFormField(i)}
-                                                style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#f2dede', color: '#a94442', border: '1px solid #ebccd1', borderRadius: '3px' }}>✕ Remove</button>
+                                                style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#f2dede', color: '#a94442', border: '1px solid #ebccd1', borderRadius: '3px' }}>Remove</button>
                                         </div>
                                     )}
                                 </div>

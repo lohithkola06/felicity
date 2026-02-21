@@ -52,7 +52,7 @@ export default function BrowseEvents() {
             <div style={{ background: '#fff', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '20px' }}>
                 <div style={{ marginBottom: '12px' }}>
                     <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder="🔍 Search events or organizers (partial & fuzzy matching)..."
+                        placeholder="Search events or organizers (partial & fuzzy matching)..."
                         style={{ width: '100%', padding: '10px 12px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
                 </div>
 
@@ -92,12 +92,12 @@ export default function BrowseEvents() {
                 <div style={{ marginTop: '12px', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px' }}>
                         <input type="checkbox" checked={trending} onChange={e => setTrending(e.target.checked)} />
-                        🔥 Trending (Top 5)
+                        Trending (Top 5)
                     </label>
                     {user && user.role === 'participant' && (
                         <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '13px' }}>
                             <input type="checkbox" checked={followedOnly} onChange={e => setFollowedOnly(e.target.checked)} />
-                            ⭐ Followed Clubs Only
+                            Followed Clubs Only
                         </label>
                     )}
                 </div>
@@ -106,7 +106,7 @@ export default function BrowseEvents() {
             {/* Trending Banner */}
             {trending && !loading && events.length > 0 && (
                 <div style={{ padding: '10px 15px', marginBottom: '15px', background: '#fff3e0', border: '1px solid #ffe0b2', borderRadius: '4px', fontSize: '13px', color: '#e65100' }}>
-                    🔥 Showing <strong>Top 5 Trending</strong> events by registration count
+                    Showing <strong>Top 5 Trending</strong> events by registration count
                 </div>
             )}
 
@@ -130,14 +130,14 @@ export default function BrowseEvents() {
                                         color: event.type === 'merchandise' ? '#c62828' : '#1565c0',
                                         textTransform: 'capitalize'
                                     }}>
-                                        {event.type === 'merchandise' ? '🛍️ Merch' : '📅 Event'}
+                                        {event.type === 'merchandise' ? 'Merch' : 'Event'}
                                     </span>
                                     <span style={{
                                         padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
                                         background: event.status === 'published' ? '#e8f5e9' : '#e3f2fd',
                                         color: event.status === 'published' ? '#2e7d32' : '#1565c0',
                                     }}>
-                                        {event.status === 'published' ? '🟢 Live' : event.status}
+                                        {event.status === 'published' ? 'Live' : event.status}
                                     </span>
                                 </div>
                                 {event.registrationFee > 0 ? (

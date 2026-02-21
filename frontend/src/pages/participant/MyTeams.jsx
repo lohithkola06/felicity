@@ -85,7 +85,7 @@ export default function MyTeams() {
             {/* Pending Invites */}
             {invites.length > 0 && (
                 <div style={{ marginBottom: '30px', background: '#fff8e1', padding: '20px', border: '1px solid #ffecb3', borderRadius: '8px' }}>
-                    <h3 style={{ marginTop: 0, color: '#f57f17' }}>📩 Pending Invites ({invites.length})</h3>
+                    <h3 style={{ marginTop: 0, color: '#f57f17' }}>Pending Invites ({invites.length})</h3>
                     {invites.map(inv => (
                         <div key={inv._id} style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -103,11 +103,11 @@ export default function MyTeams() {
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => handleInviteResponse(inv._id, 'accept')}
                                     style={{ padding: '6px 16px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                                    ✓ Accept
+                                    Accept
                                 </button>
                                 <button onClick={() => handleInviteResponse(inv._id, 'decline')}
                                     style={{ padding: '6px 16px', background: '#f44336', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                                    ✕ Decline
+                                    Decline
                                 </button>
                             </div>
                         </div>
@@ -130,7 +130,7 @@ export default function MyTeams() {
                                     <span style={statusStyle(team.status)}>{team.status}</span>
                                 </div>
                                 <p style={{ fontSize: '13px', color: '#666', marginBottom: '10px' }}>
-                                    📅 Event: <Link to={`/events/${team.event?._id}`}>{team.event?.name || 'Unknown'}</Link>
+                                    Event: <Link to={`/events/${team.event?._id}`}>{team.event?.name || 'Unknown'}</Link>
                                 </p>
 
                                 {/* Members List */}
@@ -160,21 +160,21 @@ export default function MyTeams() {
                                     {team.status !== 'registered' && (
                                         <Link to={`/teams/${team._id}/chat`}>
                                             <button style={{ padding: '6px 12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                                                💬 Team Chat
+                                                Team Chat
                                             </button>
                                         </Link>
                                     )}
                                     {team.status === 'registered' && (
                                         <Link to={`/teams/${team._id}/chat`}>
                                             <button style={{ padding: '6px 12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                                                💬 Team Chat
+                                                Team Chat
                                             </button>
                                         </Link>
                                     )}
                                     {isLeader && team.status === 'ready' && (
                                         <button onClick={() => handleRegisterTeam(team._id)}
                                             style={{ padding: '6px 12px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                                            🎫 Register Team
+                                            Register Team
                                         </button>
                                     )}
                                     {isLeader && team.status !== 'registered' && (

@@ -35,7 +35,7 @@ export default function AttendanceList() {
         setMsg(null);
         try {
             const res = await api.post('/attendance/mark', { ticketId: manualTicket.trim() });
-            setMsg({ type: 'success', text: `✅ ${res.data.message} - ${res.data.participant?.name}` });
+            setMsg({ type: 'success', text: `${res.data.message} - ${res.data.participant?.name}` });
             setManualTicket('');
             setManualReason('');
             loadAttendance();
@@ -124,7 +124,7 @@ export default function AttendanceList() {
             {/* Toolbar */}
             <div style={{ display: 'flex', gap: '10px', marginBottom: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-                    placeholder="🔍 Search by name, email or ticket..."
+                    placeholder="Search by name, email or ticket..."
                     style={{ flex: 1, minWidth: '200px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
                 <select value={filter} onChange={e => setFilter(e.target.value)}
                     style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }}>
@@ -134,11 +134,11 @@ export default function AttendanceList() {
                 </select>
                 <button onClick={handleExportCSV}
                     style={{ padding: '8px 16px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    📥 Export CSV
+                    Export CSV
                 </button>
                 <button onClick={loadAttendance}
                     style={{ padding: '8px 16px', background: '#6c757d', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-                    🔄 Refresh
+                    Refresh
                 </button>
             </div>
 
@@ -167,11 +167,11 @@ export default function AttendanceList() {
                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                 {r.attended ? (
                                     <span style={{ background: '#dff0d8', color: '#3c763d', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                                        ✓ Present
+                                        Present
                                     </span>
                                 ) : (
                                     <span style={{ background: '#f2dede', color: '#a94442', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}>
-                                        ✕ Absent
+                                        Absent
                                     </span>
                                 )}
                             </td>

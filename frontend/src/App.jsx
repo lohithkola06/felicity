@@ -34,6 +34,7 @@ import { useAuth } from './context/AuthContext';
 function ProtectedRoute({ children, role }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" />;
+  // If a specific role is required, check it. Otherwise any authenticated user is allowed.
   if (role && user.role !== role) {
     // redirect to their dashboard
     return <Navigate to={user.role === 'admin' ? '/admin/dashboard' : user.role === 'organizer' ? '/organizer/dashboard' : '/dashboard'} />;
@@ -50,10 +51,10 @@ export default function App() {
           <Route path="/" element={<Navigate to="/events" />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/events" element={<BrowseEvents />} />
-          <Route path="/events/:id" element={<EventDetail />} />
-          <Route path="/clubs" element={<ClubsListing />} />
-          <Route path="/clubs/:id" element={<ClubDetail />} />
+          <Route path="/events" element={<ProtectedRoute><BrowseEvents /></ProtectedRoute>} />
+          <Route path="/events/:id" element={<ProtectedRoute><EventDetail /></ProtectedRoute>} />
+          <Route path="/clubs" element={<ProtectedRoute><ClubsListing /></ProtectedRoute>} />
+          <Route path="/clubs/:id" element={<ProtectedRoute><ClubDetail /></ProtectedRoute>} />
 
           {/* Participant Routes */}
           <Route path="/dashboard" element={<ProtectedRoute role="participant"><ParticipantDashboard /></ProtectedRoute>} />
@@ -77,10 +78,8 @@ export default function App() {
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute role="admin"><AdminDashboard /></ProtectedRoute>} />
 
-          {/* Dev-only: Admin Clubs & Organizers view */}
-          {import.meta.env.DEV && (
-            <Route path="/admin/clubs" element={<ProtectedRoute role="admin"><AdminClubsOrganizers /></ProtectedRoute>} />
-          )}
+          {/* Admin: Clubs & Organizers view */}
+          <Route path="/admin/clubs" element={<ProtectedRoute role="admin"><AdminClubsOrganizers /></ProtectedRoute>} />
         </Routes>
       </div>
     </BrowserRouter>

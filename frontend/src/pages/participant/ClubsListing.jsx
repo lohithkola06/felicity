@@ -117,7 +117,7 @@ export default function ClubsListing() {
                                             marginTop: '8px',
                                         }}
                                     >
-                                        {actionLoading === club._id ? '...' : isFollowing ? '✓ Following' : '+ Follow'}
+                                        {actionLoading === club._id ? '...' : isFollowing ? 'Following' : '+ Follow'}
                                     </button>
                                 )}
                             </div>

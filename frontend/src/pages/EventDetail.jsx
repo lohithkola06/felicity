@@ -53,7 +53,7 @@ export default function EventDetail() {
         setStatusMessage(null);
         try {
             await api.post(`/events/${id}/register`, { formResponses });
-            setStatusMessage({ type: 'success', text: '🎉 You have been successfully registered! A ticket has been sent to your email and is available in your Dashboard.' });
+            setStatusMessage({ type: 'success', text: 'You have been successfully registered! A ticket has been sent to your email and is available in your Dashboard.' });
             loadEventDetails();
             loadMyStatus();
         } catch (err) {
@@ -72,7 +72,7 @@ export default function EventDetail() {
             await api.post(`/events/${id}/purchase`, {
                 itemName: item.name, size: item.size, color: item.color, variant: item.variant, quantity: qty
             });
-            setStatusMessage({ type: 'success', text: `🎉 Purchased ${qty} x ${item.name}! Ticket & QR code sent to your email.` });
+            setStatusMessage({ type: 'success', text: `Purchased ${qty} x ${item.name}! Ticket & QR code sent to your email.` });
             loadEventDetails();
             loadMyStatus();
         } catch (err) {
@@ -104,7 +104,7 @@ export default function EventDetail() {
                 memberEmails,
                 maxSize: teamSize,
             });
-            setStatusMessage({ type: 'success', text: '🎉 Team created! Invites sent to members. Go to My Teams to manage.' });
+            setStatusMessage({ type: 'success', text: 'Team created! Invites sent to members. Go to My Teams to manage.' });
             setShowTeamForm(false);
             setTeamName('');
             setTeamEmails('');
@@ -137,7 +137,7 @@ export default function EventDetail() {
                             color: event.type === 'merchandise' ? '#c62828' : '#1565c0',
                             textTransform: 'capitalize',
                         }}>
-                            {event.type === 'merchandise' ? '🛍️ Merchandise' : '📅 Standard Event'}
+                            {event.type === 'merchandise' ? 'Merchandise' : 'Standard Event'}
                         </span>
                         <span style={{
                             padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
@@ -235,7 +235,7 @@ export default function EventDetail() {
                 {/* Already registered banner */}
                 {alreadyRegistered && (
                     <div style={{ padding: '12px', marginBottom: '15px', background: '#d9edf7', border: '1px solid #bce8f1', borderRadius: '4px', color: '#31708f' }}>
-                        ✅ You are registered for this event.
+                        You are registered for this event.
                         {myStatus.ticketId && <span> Ticket: <strong>{myStatus.ticketId}</strong></span>}
                     </div>
                 )}
@@ -243,13 +243,13 @@ export default function EventDetail() {
                 {/* Blocking Messages */}
                 {deadlinePassed && !alreadyRegistered && (
                     <div style={{ padding: '12px', marginBottom: '15px', background: '#f2dede', border: '1px solid #ebccd1', borderRadius: '4px', color: '#a94442' }}>
-                        ⏰ Registration deadline has passed. Registration is no longer available.
+                        Registration deadline has passed. Registration is no longer available.
                     </div>
                 )}
 
                 {isFull && !deadlinePassed && !alreadyRegistered && event.type === 'normal' && (
                     <div style={{ padding: '12px', marginBottom: '15px', background: '#fcf8e3', border: '1px solid #faebcc', borderRadius: '4px', color: '#8a6d3b' }}>
-                        ⚠️ This event has reached its registration limit ({event.registrationLimit} spots). You may join the waitlist.
+                        This event has reached its registration limit ({event.registrationLimit} spots). You may join the waitlist.
                     </div>
                 )}
 
@@ -284,7 +284,7 @@ export default function EventDetail() {
                                                     </td>
                                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>Rs. {item.price}</td>
                                                     <td style={{ padding: '10px', border: '1px solid #ddd', fontWeight: 'bold', color: item.stock > 0 ? '#4caf50' : '#d9534f' }}>
-                                                        {item.stock > 0 ? `${item.stock} left` : '❌ Sold Out'}
+                                                        {item.stock > 0 ? `${item.stock} left` : 'Sold Out'}
                                                     </td>
                                                     <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                         {item.stock > 0 ? (
@@ -412,7 +412,7 @@ export default function EventDetail() {
                                             <div style={{ marginTop: '15px', textAlign: 'center' }}>
                                                 <button onClick={() => setShowTeamForm(!showTeamForm)}
                                                     style={{ background: 'none', border: 'none', color: '#337ab7', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
-                                                    {showTeamForm ? 'Cancel team registration' : '👥 Or register as a team'}
+                                                    {showTeamForm ? 'Cancel team registration' : 'Or register as a team'}
                                                 </button>
                                             </div>
 

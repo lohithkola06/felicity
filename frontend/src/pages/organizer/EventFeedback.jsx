@@ -52,7 +52,7 @@ export default function EventFeedback() {
                             const pct = stats.total > 0 ? (count / stats.total) * 100 : 0;
                             return (
                                 <div key={r} style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
-                                    <span style={{ width: '20px', fontWeight: 'bold' }}>{r} ★</span>
+                                    <span style={{ width: '20px', fontWeight: 'bold' }}>{r} *</span>
                                     <div style={{ flex: 1, height: '10px', background: '#eee', margin: '0 10px', borderRadius: '5px', overflow: 'hidden' }}>
                                         <div style={{ width: `${pct}%`, background: '#ffc107', height: '100%' }}></div>
                                     </div>
@@ -84,7 +84,7 @@ export default function EventFeedback() {
                     feedbacks.map(f => (
                         <div key={f._id} style={{ padding: '15px', background: '#fff', border: '1px solid #eee', borderRadius: '4px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                <div style={{ color: '#ffc107', fontWeight: 'bold' }}>{'★'.repeat(f.rating)}<span style={{ color: '#ddd' }}>{'★'.repeat(5 - f.rating)}</span></div>
+                                <div style={{ color: '#ffc107', fontWeight: 'bold' }}>{'*'.repeat(f.rating)}<span style={{ color: '#ddd' }}>{'*'.repeat(5 - f.rating)}</span></div>
                                 <div style={{ fontSize: '12px', color: '#999' }}>{new Date(f.createdAt).toLocaleDateString()}</div>
                             </div>
                             <p style={{ margin: 0, color: '#333' }}>{f.comment || <span style={{ color: '#ccc', fontStyle: 'italic' }}>No comment provided</span>}</p>

@@ -10,37 +10,42 @@ router.use(auth, authorize('admin'));
 
 // POST /api/admin/create-organizer
 // admin creates a new club/organizer account
-// System auto-generates login credentials; admin receives them to share.
+// System auto-generates BOTH login email and password; admin receives them to share.
 router.post('/create-organizer', async (req, res) => {
     try {
-        const { organizerName, category, description, contactEmail } = req.body;
+        const { organizerName, category, description } = req.body;
 
-        if (!organizerName || !category || !contactEmail) {
-            return res.status(400).json({ error: 'Organizer name, category, and contact email are required.' });
+        if (!organizerName || !category) {
+            return res.status(400).json({ error: 'Organizer name and category are required.' });
         }
 
-        // Strict Email Validation: Organizers must be IIIT domain
-        if (!contactEmail.endsWith('@iiit.ac.in')) {
-            return res.status(400).json({ error: 'Organizer contact email must be an official @iiit.ac.in address.' });
-        }
+        // Auto-generate login email from the club/organizer name
+        // e.g. "Tech Club" → "tech.club@iiit.ac.in"
+        const baseLocal = organizerName
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s]/g, '')  // remove special chars
+            .replace(/\s+/g, '.');          // spaces → dots
+        let generatedEmail = `${baseLocal}@iiit.ac.in`;
 
-        // make sure this email isnt taken already
-        const existing = await User.findOne({ email: contactEmail });
-        if (existing) {
-            return res.status(400).json({ error: `Email ${contactEmail} is already taken` });
+        // If that email already exists, append a numeric suffix
+        let suffix = 1;
+        while (await User.findOne({ email: generatedEmail })) {
+            generatedEmail = `${baseLocal}${suffix}@iiit.ac.in`;
+            suffix++;
         }
 
         // Auto-generate a secure password
         const generatedPassword = crypto.randomBytes(10).toString('hex');
 
         const organizer = new User({
-            email: contactEmail,
+            email: generatedEmail,
             password: generatedPassword,
             role: 'organizer',
             organizerName,
             category,
             description: description || '',
-            contactEmail,
+            contactEmail: generatedEmail,
         });
         await organizer.save();
 
@@ -48,7 +53,7 @@ router.post('/create-organizer', async (req, res) => {
             message: 'Organizer created successfully',
             organizer,
             credentials: {
-                email: contactEmail,
+                email: generatedEmail,
                 password: generatedPassword,
             },
         });

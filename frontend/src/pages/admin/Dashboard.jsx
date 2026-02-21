@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function AdminDashboard() {
     const [organizers, setOrganizers] = useState([]);
     const [resetRequests, setResetRequests] = useState([]);
-    const [form, setForm] = useState({ organizerName: '', contactEmail: '', category: 'Technical', description: '' });
+    const [form, setForm] = useState({ organizerName: '', category: 'Technical', description: '' });
     const [confirmAction, setConfirmAction] = useState(null);
     const [activeTab, setActiveTab] = useState('organizers');
     const [generatedCreds, setGeneratedCreds] = useState(null);
@@ -41,7 +41,7 @@ export default function AdminDashboard() {
         try {
             const res = await api.post('/admin/create-organizer', form);
             fetchData();
-            setForm({ organizerName: '', contactEmail: '', category: 'Technical', description: '' });
+            setForm({ organizerName: '', category: 'Technical', description: '' });
             // Show generated credentials so admin can share them
             if (res.data.credentials) {
                 setGeneratedCreds(res.data.credentials);
@@ -129,11 +129,10 @@ export default function AdminDashboard() {
                 <>
                     <div style={{ border: '1px solid #ccc', padding: '20px', background: '#f9f9f9', marginBottom: '30px' }}>
                         <h3>Add New Club / Organizer</h3>
-                        <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>The system will auto-generate login credentials. Share them with the organizer after creation.</p>
+                        <p style={{ fontSize: '13px', color: '#666', marginBottom: '12px' }}>The system will auto-generate both the login email and password. Share them with the organizer after creation.</p>
                         <form onSubmit={createOrganizer}>
                             <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                                 <input type="text" placeholder="Club / Organizer Name" value={form.organizerName} onChange={e => setForm({ ...form, organizerName: e.target.value })} style={{ flex: 2, padding: '8px' }} required />
-                                <input type="email" placeholder="Email (@iiit.ac.in)" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} style={{ flex: 2, padding: '8px' }} required />
                                 <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} style={{ flex: 1, padding: '8px' }}>
                                     <option>Technical</option>
                                     <option>Cultural</option>

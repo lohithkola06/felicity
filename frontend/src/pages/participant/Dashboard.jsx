@@ -41,11 +41,11 @@ export default function ParticipantDashboard() {
     else if (activeTab === 'cancelled') items = data.history?.cancelled || [];
 
     const tabs = [
-        { key: 'upcoming', label: '📅 Upcoming' },
-        { key: 'normal', label: '🎯 Normal' },
-        { key: 'merchandise', label: '🛍️ Merchandise' },
-        { key: 'completed', label: '✅ Completed' },
-        { key: 'cancelled', label: '❌ Cancelled' },
+        { key: 'upcoming', label: 'Upcoming' },
+        { key: 'normal', label: 'Normal' },
+        { key: 'merchandise', label: 'Merchandise' },
+        { key: 'completed', label: 'Completed' },
+        { key: 'cancelled', label: 'Cancelled' },
     ];
 
     return (
@@ -97,7 +97,7 @@ export default function ParticipantDashboard() {
                                         background: entry.eventType === 'merchandise' ? '#fce4ec' : '#e3f2fd',
                                         color: entry.eventType === 'merchandise' ? '#c62828' : '#1565c0',
                                     }}>
-                                        {entry.eventType === 'merchandise' ? '🛍️ Merch' : '📅 Normal'}
+                                        {entry.eventType === 'merchandise' ? 'Merch' : 'Normal'}
                                     </span>
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>{entry.organizer}</td>
@@ -126,7 +126,7 @@ export default function ParticipantDashboard() {
                                         <Link to={`/events/${entry.eventId || ''}`}
                                             style={{ fontSize: '12px', color: '#337ab7', textDecoration: 'underline', cursor: 'pointer' }}
                                             title="View event & ticket details">
-                                            🎫 {entry.ticketId}
+                                            {entry.ticketId}
                                         </Link>
                                     )}
                                     {activeTab === 'upcoming' && entry.status !== 'cancelled' && (

@@ -68,7 +68,7 @@ export default function TeamChat() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', marginBottom: '15px' }}>
                 <div>
-                    <h2 style={{ margin: 0 }}>💬 {team?.name || 'Team'} Chat</h2>
+                    <h2 style={{ margin: 0 }}>{team?.name || 'Team'} Chat</h2>
                     {team && (
                         <div style={{ fontSize: '13px', color: '#888', marginTop: '4px' }}>
                             Event: {team.event?.name} • {(team.members?.length || 0) + 1} members
@@ -76,7 +76,7 @@ export default function TeamChat() {
                     )}
                 </div>
                 <div style={{ fontSize: '11px', color: '#888', background: '#e8f5e9', padding: '4px 10px', borderRadius: '12px' }}>
-                    🟢 Live
+                    Live
                 </div>
             </div>
 
@@ -99,7 +99,7 @@ export default function TeamChat() {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
                     {messages.length === 0 ? (
                         <div style={{ textAlign: 'center', color: '#ccc', marginTop: '100px' }}>
-                            No messages yet. Start the conversation! 💬
+                            No messages yet. Start the conversation!
                         </div>
                     ) : messages.map((m, i) => {
                         const senderId = m.sender?._id || m.sender;

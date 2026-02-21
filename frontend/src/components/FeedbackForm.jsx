@@ -56,7 +56,7 @@ export default function FeedbackForm({ eventId, onFeedbackSubmitted }) {
                                 marginRight: '5px'
                             }}
                         >
-                            ★
+                            *
                         </span>
                     ))}
                 </div>

@@ -148,7 +148,7 @@ export default function OrganizerDashboard() {
                                         </span>
                                     </div>
                                     <p style={{ color: '#666', fontSize: '13px', textTransform: 'capitalize', marginBottom: '6px' }}>
-                                        {e.type === 'merchandise' ? '🛍️ Merchandise' : '📅 Standard Event'}
+                                        {e.type === 'merchandise' ? 'Merchandise' : 'Standard Event'}
                                     </p>
                                     <p style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>
                                         {e.startDate ? new Date(e.startDate).toLocaleDateString() : 'Date TBD'}

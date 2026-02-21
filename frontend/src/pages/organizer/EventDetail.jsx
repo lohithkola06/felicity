@@ -213,7 +213,7 @@ export default function OrgEventDetail() {
                     <h2 style={{ margin: 0 }}>Participants ({filteredParticipants.length})</h2>
                     <button onClick={handleExportCSV}
                         style={{ padding: '8px 16px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px' }}>
-                        📥 Export CSV
+                        Export CSV
                     </button>
                 </div>
 
@@ -275,7 +275,7 @@ export default function OrgEventDetail() {
                                                 {r.team ? r.team : '-'}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                                {r.attended ? '✅ Yes' : '❌ No'}
+                                                {r.attended ? 'Yes' : 'No'}
                                             </td>
                                         </tr>
                                     );
