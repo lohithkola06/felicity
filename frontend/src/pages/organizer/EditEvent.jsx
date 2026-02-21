@@ -22,14 +22,25 @@ export default function EditEvent() {
     const [loading, setLoading] = useState(true);
     const [statusUpdating, setStatusUpdating] = useState(false);
 
+    function toLocalDatetimeString(isoStr) {
+        if (!isoStr) return '';
+        const d = new Date(isoStr);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hours = String(d.getHours()).padStart(2, '0');
+        const minutes = String(d.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
     useEffect(() => {
         api.get(`/events/${id}`).then(res => {
             const d = res.data;
             setForm({
                 name: d.name, description: d.description, type: d.type,
-                startDate: d.startDate ? d.startDate.slice(0, 16) : '',
-                endDate: d.endDate ? d.endDate.slice(0, 16) : '',
-                registrationDeadline: d.registrationDeadline ? d.registrationDeadline.slice(0, 16) : '',
+                startDate: toLocalDatetimeString(d.startDate),
+                endDate: toLocalDatetimeString(d.endDate),
+                registrationDeadline: toLocalDatetimeString(d.registrationDeadline),
                 venue: d.venue || '', registrationFee: d.registrationFee || 0, registrationLimit: d.registrationLimit || 0,
                 eligibility: d.eligibility || 'all', tags: d.tags ? d.tags.join(', ') : '', status: d.status,
                 purchaseLimitPerUser: d.purchaseLimitPerUser || 1,
@@ -106,7 +117,6 @@ export default function EditEvent() {
             const payload = {};
 
             if (isDraft) {
-                // Draft: full freedom
                 Object.assign(payload, {
                     ...form,
                     registrationLimit: parseInt(form.registrationLimit) || 0,
@@ -114,12 +124,14 @@ export default function EditEvent() {
                     tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
                     customForm: form.type === 'normal' ? customForm : [],
                 });
+                if (form.startDate) payload.startDate = new Date(form.startDate).toISOString();
+                if (form.endDate) payload.endDate = new Date(form.endDate).toISOString();
+                if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
                 delete payload.status;
                 delete payload.formLocked;
             } else if (isPublished) {
-                // Published: restricted edits
                 payload.description = form.description;
-                if (form.registrationDeadline) payload.registrationDeadline = form.registrationDeadline;
+                if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
                 if (form.registrationLimit) payload.registrationLimit = parseInt(form.registrationLimit) || 0;
             }
 
@@ -139,12 +151,6 @@ export default function EditEvent() {
 
     return (
         <div style={{ maxWidth: '800px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
-            <div style={{ padding: '10px 15px', marginBottom: '20px', background: '#f5f5f5', color: '#333', border: '1px solid #eee', borderRadius: '4px', fontSize: '13px' }}>
-                <strong>Editing Rules & Actions:</strong><br />
-                Draft (free edits, can be published); Published (description update, extend deadline, increase limit, close registrations); Ongoing/Completed (no edits except status change, can be marked completed or closed).
-                <br /><br />
-                <strong>Form Builder:</strong> Organizers can create custom registration forms for events. Supports various field types (text, dropdown, checkbox, file upload, etc.), mark fields as required/flexible, and reorder fields. Forms are locked after the first registration is received.
-            </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
                 <h1 style={{ margin: 0 }}>Edit Event</h1>
                 <span style={{
