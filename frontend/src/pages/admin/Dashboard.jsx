@@ -228,7 +228,7 @@ export default function AdminDashboard() {
                                 {resetRequests.map(r => (
                                     <tr key={r._id} style={{ borderBottom: '1px solid #ddd' }}>
                                         <td style={{ padding: '10px' }}>{r.organizer?.organizerName || 'Unknown'}</td>
-                                        <td style={{ padding: '10px' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                                        <td style={{ padding: '10px' }}>{new Date(r.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                                         <td style={{ padding: '10px' }}>{r.reason || '-'}</td>
                                         <td style={{ padding: '10px' }}>
                                             <span style={{

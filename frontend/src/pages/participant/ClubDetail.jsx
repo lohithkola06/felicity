@@ -69,7 +69,7 @@ export default function ClubDetail() {
                     {upcomingEvents.map(e => (
                         <li key={e._id} style={{ padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
                             <Link to={`/events/${e._id}`} style={{ color: '#337ab7', textDecoration: 'none', fontWeight: 'bold' }}>{e.name}</Link>
-                            <span style={{ marginLeft: '10px', fontSize: '13px', color: '#777' }}>{new Date(e.startDate).toLocaleDateString()}</span>
+                            <span style={{ marginLeft: '10px', fontSize: '13px', color: '#777' }}>{new Date(e.startDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                             <span style={{ marginLeft: '10px', fontSize: '12px', background: e.type === 'merchandise' ? '#fcf8e3' : '#dff0d8', padding: '2px 8px', borderRadius: '10px' }}>{e.type}</span>
                         </li>
                     ))}
@@ -84,7 +84,7 @@ export default function ClubDetail() {
                     {pastEvents.map(e => (
                         <li key={e._id} style={{ padding: '10px 0', borderBottom: '1px solid #f0f0f0' }}>
                             <Link to={`/events/${e._id}`} style={{ color: '#337ab7', textDecoration: 'none' }}>{e.name}</Link>
-                            <span style={{ marginLeft: '10px', fontSize: '13px', color: '#777' }}>{new Date(e.startDate).toLocaleDateString()}</span>
+                            <span style={{ marginLeft: '10px', fontSize: '13px', color: '#777' }}>{new Date(e.startDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</span>
                         </li>
                     ))}
                 </ul>

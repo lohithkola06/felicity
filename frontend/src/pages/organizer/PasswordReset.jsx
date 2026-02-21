@@ -66,7 +66,7 @@ export default function PasswordReset() {
                     <tbody>
                         {requests.map(r => (
                             <tr key={r._id} style={{ borderBottom: '1px solid #ddd' }}>
-                                <td style={{ padding: '8px' }}>{new Date(r.createdAt).toLocaleDateString()}</td>
+                                <td style={{ padding: '8px' }}>{new Date(r.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
                                 <td style={{ padding: '8px' }}>
                                     <span style={{
                                         padding: '2px 8px', borderRadius: '3px', fontSize: '12px',

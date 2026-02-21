@@ -206,7 +206,7 @@ export default function EditEvent() {
                             {isDraft ? (
                                 <input type="datetime-local" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} style={{ width: '100%', padding: '8px' }} required />
                             ) : (
-                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px', color: '#666' }}>{form.startDate ? new Date(form.startDate).toLocaleString() : 'TBD'}</div>
+                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px', color: '#666' }}>{form.startDate ? new Date(form.startDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}</div>
                             )}
                         </div>
                         <div style={{ flex: 1 }}>
@@ -214,7 +214,7 @@ export default function EditEvent() {
                             {isDraft ? (
                                 <input type="datetime-local" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} style={{ width: '100%', padding: '8px' }} required />
                             ) : (
-                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px', color: '#666' }}>{form.endDate ? new Date(form.endDate).toLocaleString() : 'TBD'}</div>
+                                <div style={{ padding: '8px', background: '#f5f5f5', borderRadius: '4px', color: '#666' }}>{form.endDate ? new Date(form.endDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}</div>
                             )}
                         </div>
                     </div>

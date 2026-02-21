@@ -174,11 +174,11 @@ export default function EventDetail() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                         <div>
                             <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Starts</strong>
-                            {event.startDate ? new Date(event.startDate).toLocaleString() : 'TBD'}
+                            {event.startDate ? new Date(event.startDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}
                         </div>
                         <div>
                             <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Ends</strong>
-                            {event.endDate ? new Date(event.endDate).toLocaleString() : 'TBD'}
+                            {event.endDate ? new Date(event.endDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}
                         </div>
                         {event.venue && (
                             <div>
@@ -208,7 +208,7 @@ export default function EventDetail() {
                             <div>
                                 <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Registration Deadline</strong>
                                 <span style={{ color: deadlinePassed ? '#d9534f' : 'inherit' }}>
-                                    {new Date(event.registrationDeadline).toLocaleString()}
+                                    {new Date(event.registrationDeadline).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                     {deadlinePassed && ' (PASSED)'}
                                 </span>
                             </div>

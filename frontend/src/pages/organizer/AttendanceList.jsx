@@ -183,7 +183,7 @@ export default function AttendanceList() {
                                 )}
                             </td>
                             <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '12px', color: '#666' }}>
-                                {r.attendedAt ? new Date(r.attendedAt).toLocaleString() : '-'}
+                                {r.attendedAt ? new Date(r.attendedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : '-'}
                             </td>
                         </tr>
                     ))}

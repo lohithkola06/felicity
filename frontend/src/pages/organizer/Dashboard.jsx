@@ -151,7 +151,7 @@ export default function OrganizerDashboard() {
                                         {e.type === 'merchandise' ? 'Merchandise' : 'Standard Event'}
                                     </p>
                                     <p style={{ color: '#888', fontSize: '12px', marginBottom: '4px' }}>
-                                        {e.startDate ? new Date(e.startDate).toLocaleDateString() : 'Date TBD'}
+                                        {e.startDate ? new Date(e.startDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'Date TBD'}
                                     </p>
                                     <p style={{ color: '#888', fontSize: '12px' }}>
                                         {e.registrationCount} registration{e.registrationCount !== 1 ? 's' : ''}

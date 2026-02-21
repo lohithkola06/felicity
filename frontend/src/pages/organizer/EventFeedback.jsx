@@ -85,7 +85,7 @@ export default function EventFeedback() {
                         <div key={f._id} style={{ padding: '15px', background: '#fff', border: '1px solid #eee', borderRadius: '4px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                                 <div style={{ color: '#ffc107', fontWeight: 'bold' }}>{'*'.repeat(f.rating)}<span style={{ color: '#ddd' }}>{'*'.repeat(5 - f.rating)}</span></div>
-                                <div style={{ fontSize: '12px', color: '#999' }}>{new Date(f.createdAt).toLocaleDateString()}</div>
+                                <div style={{ fontSize: '12px', color: '#999' }}>{new Date(f.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</div>
                             </div>
                             <p style={{ margin: 0, color: '#333' }}>{f.comment || <span style={{ color: '#ccc', fontStyle: 'italic' }}>No comment provided</span>}</p>
                         </div>

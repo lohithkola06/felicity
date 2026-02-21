@@ -47,10 +47,20 @@ export default function OrgEventDetail() {
         }
     };
 
-    const handleExportCSV = () => {
-        const token = localStorage.getItem('token');
-        const baseUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api';
-        window.open(`${baseUrl}/organizer/events/${id}/export?token=${token}`, '_blank');
+    const handleExportCSV = async () => {
+        try {
+            const res = await api.get(`/organizer/events/${id}/export`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `${event?.name || 'event'}-participants.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            alert('Export failed');
+        }
     };
 
     if (loading) return <div style={{ maxWidth: '960px', margin: '40px auto', textAlign: 'center' }}>Loading...</div>;
@@ -140,11 +150,11 @@ export default function OrgEventDetail() {
                     </div>
                     <div>
                         <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Start Date</strong>
-                        {event.startDate ? new Date(event.startDate).toLocaleString() : 'TBD'}
+                        {event.startDate ? new Date(event.startDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}
                     </div>
                     <div>
                         <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>End Date</strong>
-                        {event.endDate ? new Date(event.endDate).toLocaleString() : 'TBD'}
+                        {event.endDate ? new Date(event.endDate).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'TBD'}
                     </div>
                     <div>
                         <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Eligibility</strong>
@@ -167,7 +177,7 @@ export default function OrgEventDetail() {
                     {event.registrationDeadline && (
                         <div>
                             <strong style={{ fontSize: '12px', color: '#888', display: 'block' }}>Registration Deadline</strong>
-                            {new Date(event.registrationDeadline).toLocaleString()}
+                            {new Date(event.registrationDeadline).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
                         </div>
                     )}
                 </div>
@@ -264,7 +274,7 @@ export default function OrgEventDetail() {
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>{p?.email || '-'}</td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-                                                {r.registeredAt ? new Date(r.registeredAt).toLocaleDateString() : '-'}
+                                                {r.registeredAt ? new Date(r.registeredAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '-'}
                                             </td>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 <span style={{

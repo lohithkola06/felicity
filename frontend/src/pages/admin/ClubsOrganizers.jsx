@@ -100,7 +100,7 @@ export default function ClubsOrganizers() {
                                 </td>
                                 <td style={{ padding: '10px', fontSize: '13px', color: '#555' }}>{org.contactEmail || org.email}</td>
                                 <td style={{ padding: '10px', fontSize: '13px', color: '#777', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{org.description || '—'}</td>
-                                <td style={{ padding: '10px', fontSize: '13px', color: '#999' }}>{org.createdAt ? new Date(org.createdAt).toLocaleDateString() : '—'}</td>
+                                <td style={{ padding: '10px', fontSize: '13px', color: '#999' }}>{org.createdAt ? new Date(org.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '—'}</td>
                             </tr>
                         ))}
                     </tbody>

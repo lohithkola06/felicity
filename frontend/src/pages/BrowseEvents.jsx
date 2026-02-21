@@ -167,7 +167,7 @@ export default function BrowseEvents() {
                             </p>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#888' }}>
-                                <span>{event.startDate ? new Date(event.startDate).toLocaleDateString() : 'Date TBD'}</span>
+                                <span>{event.startDate ? new Date(event.startDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : 'Date TBD'}</span>
                                 <span>{event.registrationCount} registered</span>
                             </div>
                         </div>

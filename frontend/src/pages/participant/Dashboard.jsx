@@ -110,10 +110,10 @@ export default function ParticipantDashboard() {
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>{entry.organizer}</td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd', fontSize: '13px' }}>
-                                    {entry.startDate ? new Date(entry.startDate).toLocaleDateString() : '-'}
+                                    {entry.startDate ? new Date(entry.startDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' }) : '-'}
                                     {entry.endDate && (
                                         <div style={{ color: '#888', fontSize: '11px' }}>
-                                            to {new Date(entry.endDate).toLocaleDateString()}
+                                            to {new Date(entry.endDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}
                                         </div>
                                     )}
                                 </td>
