@@ -467,14 +467,7 @@ export default function EventDetail() {
                     </div>
                 )}
 
-                {/* Refund Policy */}
-                <div style={{ marginTop: '30px', borderTop: '1px solid #eee', paddingTop: '20px' }}>
-                    <h3>Refund Policy</h3>
-                    <p style={{ fontSize: '13px', color: '#666' }}>
-                        Full refunds available if cancelled at least 24 hours before the event.
-                        Contact the organizer at <strong>{event.organizer?.contactEmail || 'contact@example.com'}</strong> for specific queries.
-                    </p>
-                </div>
+                {/* Refund policy removed */}
 
                 {/* Feedback Section */}
                 {myStatus?.attended && (

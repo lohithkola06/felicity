@@ -39,7 +39,7 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
     try {
         const transport = await getTransporter();
         const info = await transport.sendMail({
-            from: process.env.SMTP_FROM || '"FestFlow" <noreply@festflow.app>',
+            from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
             subject: `🎟️ registration confirmed - ${eventName}`,
             html: `
@@ -49,7 +49,7 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
                     <p>Show this QR code at the venue:</p>
                     <img src="${qrCodeDataUrl}" alt="QR Code" style="width:200px;height:200px;" />
-                    <p style="color:#888;margin-top:20px;">— FestFlow</p>
+                    <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
         });
@@ -68,7 +68,7 @@ async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) 
     try {
         const transport = await getTransporter();
         const info = await transport.sendMail({
-            from: process.env.SMTP_FROM || '"FestFlow" <noreply@festflow.app>',
+            from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
             subject: `🛍️ purchase confirmed - ${itemName}`,
             html: `
@@ -78,7 +78,7 @@ async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) 
                     <p>Item: <strong>${itemName}</strong></p>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
                     <img src="${qrCodeDataUrl}" alt="QR Code" style="width:200px;height:200px;" />
-                    <p style="color:#888;margin-top:20px;">— FestFlow</p>
+                    <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
         });
@@ -95,7 +95,7 @@ async function sendWaitlistNotification(to, eventName, eventId) {
     try {
         const transport = await getTransporter();
         const info = await transport.sendMail({
-            from: process.env.SMTP_FROM || '"FestFlow" <noreply@festflow.app>',
+            from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
             subject: `🎫 Spot opened - ${eventName}`,
             html: `
@@ -104,7 +104,7 @@ async function sendWaitlistNotification(to, eventName, eventId) {
                     <p>A spot has opened up for <strong>${eventName}</strong>.</p>
                     <p>If you're still interested, please register as soon as possible before someone else grabs it!</p>
                     <p><a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/events/${eventId}">Go to Event Page</a></p>
-                    <p style="color:#888;margin-top:20px;">— FestFlow</p>
+                    <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
         });

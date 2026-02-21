@@ -6,6 +6,7 @@ export default function ParticipantDashboard() {
     const [data, setData] = useState({ upcoming: [], history: { normal: [], merchandise: [], completed: [], cancelled: [] } });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
+    const [confirmCancel, setConfirmCancel] = useState(null);
 
     useEffect(() => {
         fetchDashboard();
@@ -22,13 +23,19 @@ export default function ParticipantDashboard() {
         }
     };
 
-    async function handleCancel(regId) {
-        if (!confirm('Are you sure you want to cancel this registration?')) return;
+    function promptCancel(regId) {
+        setConfirmCancel(regId);
+    }
+
+    async function executeCancel() {
+        if (!confirmCancel) return;
         try {
-            await api.post(`/participant/registrations/${regId}/cancel`);
+            await api.post(`/participant/registrations/${confirmCancel}/cancel`);
             fetchDashboard();
         } catch (err) {
             alert(err.response?.data?.error || 'Cancellation failed');
+        } finally {
+            setConfirmCancel(null);
         }
     }
 
@@ -129,8 +136,8 @@ export default function ParticipantDashboard() {
                                             {entry.ticketId}
                                         </Link>
                                     )}
-                                    {activeTab === 'upcoming' && entry.status !== 'cancelled' && (
-                                        <button onClick={() => handleCancel(entry.registrationId)}
+                                    {activeTab === 'upcoming' && entry.status !== 'cancelled' && entry.eventType !== 'merchandise' && (
+                                        <button onClick={() => promptCancel(entry.registrationId)}
                                             style={{ display: 'block', marginTop: '4px', color: '#d9534f', fontSize: '12px', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
                                             Cancel
                                         </button>
@@ -140,6 +147,31 @@ export default function ParticipantDashboard() {
                         ))}
                     </tbody>
                 </table>
+            )}
+
+            {/* Custom Modal for Cancellations */}
+            {confirmCancel && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Cancel Registration</h3>
+                        <p style={{ margin: 0, color: '#555', fontSize: '15px', lineHeight: '1.5' }}>
+                            Are you sure you want to cancel this registration? This action cannot be undone.
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button onClick={() => setConfirmCancel(null)}
+                                style={{ padding: '8px 16px', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Keep Registration
+                            </button>
+                            <button onClick={executeCancel}
+                                style={{ padding: '8px 16px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Yes, Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );
