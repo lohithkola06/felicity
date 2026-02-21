@@ -46,8 +46,15 @@ export default function AttendanceList() {
 
     async function handleExportCSV() {
         try {
-            const token = localStorage.getItem('token');
-            window.open(`${import.meta.env.VITE_API_URL || ''}/api/attendance/event/${id}/csv?token=${token}`, '_blank');
+            const res = await api.get(`/attendance/event/${id}/csv`, { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `attendance-${id}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
         } catch (err) {
             alert('Export failed');
         }
