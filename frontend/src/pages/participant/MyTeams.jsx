@@ -8,6 +8,7 @@ export default function MyTeams() {
     const [teams, setTeams] = useState([]);
     const [invites, setInvites] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [confirmAction, setConfirmAction] = useState(null);
 
     useEffect(() => { fetchTeams(); }, []);
 
@@ -47,24 +48,26 @@ export default function MyTeams() {
         }
     }
 
-    async function handleDisband(teamId) {
-        if (!confirm('Are you sure you want to disband this team?')) return;
-        try {
-            await api.delete(`/teams/${teamId}`);
-            fetchTeams();
-        } catch (err) {
-            alert(err.response?.data?.error || 'Could not disband team');
-        }
+    function promptAction(action, teamId, message) {
+        setConfirmAction({ action, teamId, message });
     }
 
-    async function handleRegisterTeam(teamId) {
-        if (!confirm('Register the entire team? All members must have accepted their invites.')) return;
+    async function executeConfirmAction() {
+        if (!confirmAction) return;
+        const { action, teamId } = confirmAction;
+
         try {
-            const res = await api.post(`/teams/${teamId}/register`);
-            alert(res.data.message || 'Team registered!');
+            if (action === 'disband') {
+                await api.delete(`/teams/${teamId}`);
+            } else if (action === 'register') {
+                const res = await api.post(`/teams/${teamId}/register`);
+                alert(res.data.message || 'Team registered!');
+            }
             fetchTeams();
         } catch (err) {
-            alert(err.response?.data?.error || 'Registration failed');
+            alert(err.response?.data?.error || 'Action failed');
+        } finally {
+            setConfirmAction(null);
         }
     }
 
@@ -172,13 +175,13 @@ export default function MyTeams() {
                                         </Link>
                                     )}
                                     {isLeader && team.status === 'ready' && (
-                                        <button onClick={() => handleRegisterTeam(team._id)}
+                                        <button onClick={() => promptAction('register', team._id, 'Register the entire team? All members must have accepted their invites.')}
                                             style={{ padding: '6px 12px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
                                             Register Team
                                         </button>
                                     )}
                                     {isLeader && team.status !== 'registered' && (
-                                        <button onClick={() => handleDisband(team._id)}
+                                        <button onClick={() => promptAction('disband', team._id, 'Are you sure you want to disband this team?')}
                                             style={{ padding: '6px 12px', background: '#f44336', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
                                             Disband
                                         </button>
@@ -187,6 +190,31 @@ export default function MyTeams() {
                             </div>
                         );
                     })}
+                </div>
+            )}
+
+            {/* Custom Confirm Modal */}
+            {confirmAction && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Confirm Action</h3>
+                        <p style={{ margin: 0, color: '#555', fontSize: '15px', lineHeight: '1.5' }}>
+                            {confirmAction.message}
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button onClick={() => setConfirmAction(null)}
+                                style={{ padding: '8px 16px', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Cancel
+                            </button>
+                            <button onClick={executeConfirmAction}
+                                style={{ padding: '8px 16px', background: confirmAction.action === 'disband' ? '#d9534f' : '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Confirm
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

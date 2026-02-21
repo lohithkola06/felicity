@@ -420,7 +420,7 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/my-status', auth, async (req, res) => {
     try {
         const registration = await Registration.findOne({ event: req.params.id, participant: req.user._id });
-        if (!registration) return res.json({ registered: false });
+        if (!registration || registration.status === 'cancelled') return res.json({ registered: false });
         res.json({ registered: true, ...registration.toJSON() });
     } catch (err) {
         console.error('Fetch My Status Error:', err);
@@ -450,20 +450,35 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
             return res.status(400).json({ error: 'This event is restricted to IIIT students only.' });
 
         // Check for double registration
-        const existingRegistration = await Registration.findOne({ event: event._id, participant: req.user._id });
-        if (existingRegistration) return res.status(400).json({ error: 'You are already registered for this event.' });
+        let registration = await Registration.findOne({ event: event._id, participant: req.user._id });
+        if (registration) {
+            if (registration.status !== 'cancelled') {
+                return res.status(400).json({ error: 'You are already registered for this event.' });
+            }
+        }
 
         // Generate Ticket (QR Code)
         const { ticketId, qrCode } = await generateTicket(event.name, req.user.email);
 
-        const registration = await Registration.create({
-            event: event._id,
-            participant: req.user._id,
-            formResponses: req.body.formResponses || {},
-            ticketId,
-            qrCode,
-            paymentStatus: event.registrationFee > 0 ? 'pending' : 'paid',
-        });
+        if (registration) {
+            // Repurpose the cancelled registration to avoid unique index collision
+            registration.status = 'registered';
+            registration.formResponses = req.body.formResponses || {};
+            registration.ticketId = ticketId;
+            registration.qrCode = qrCode;
+            registration.paymentStatus = event.registrationFee > 0 ? 'pending' : 'paid';
+            registration.registeredAt = Date.now();
+            await registration.save();
+        } else {
+            registration = await Registration.create({
+                event: event._id,
+                participant: req.user._id,
+                formResponses: req.body.formResponses || {},
+                ticketId,
+                qrCode,
+                paymentStatus: event.registrationFee > 0 ? 'pending' : 'paid',
+            });
+        }
 
         // Update Event Stats
         event.registrationCount += 1;
