@@ -70,14 +70,18 @@ export default function Onboarding() {
                         {INTEREST_OPTIONS.map(opt => (
                             <button key={opt} type="button" onClick={() => toggleInterest(opt)}
                                 style={{
-                                    padding: '12px 24px', border: '2px solid',
-                                    borderColor: interests.includes(opt) ? '#337ab7' : '#ccc',
+                                    display: 'flex', alignItems: 'center', gap: '8px',
+                                    padding: '12px 24px', border: interests.includes(opt) ? '2px solid #337ab7' : '2px solid #ccc',
                                     borderRadius: '24px',
-                                    background: interests.includes(opt) ? '#337ab7' : '#fff',
-                                    color: interests.includes(opt) ? '#fff' : '#333',
-                                    cursor: 'pointer', fontSize: '14px', transition: 'all 0.2s',
+                                    background: interests.includes(opt) ? '#e6f0fa' : '#fff',
+                                    color: interests.includes(opt) ? '#337ab7' : '#333',
+                                    cursor: 'pointer', fontSize: '15px', transition: 'all 0.2s',
+                                    fontWeight: interests.includes(opt) ? 'bold' : 'normal',
+                                    transform: interests.includes(opt) ? 'scale(1.05)' : 'scale(1)',
+                                    boxShadow: interests.includes(opt) ? '0 4px 8px rgba(51, 122, 183, 0.2)' : 'none'
                                 }}>
                                 {opt}
+                                {interests.includes(opt) && <span style={{ fontSize: '16px' }}>✓</span>}
                             </button>
                         ))}
                     </div>

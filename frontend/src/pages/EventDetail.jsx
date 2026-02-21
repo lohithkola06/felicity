@@ -20,6 +20,7 @@ export default function EventDetail() {
     const [teamName, setTeamName] = useState('');
     const [teamEmails, setTeamEmails] = useState('');
     const [teamSize, setTeamSize] = useState(4);
+    const [confirmConfig, setConfirmConfig] = useState(null);
 
     useEffect(() => {
         loadEventDetails();
@@ -47,8 +48,11 @@ export default function EventDetail() {
         }
     }
 
-    async function handleRegister() {
-        if (!confirm('Are you sure you want to register for this event?')) return;
+    function promptRegister() {
+        setConfirmConfig({ action: 'register', message: 'Are you sure you want to register for this event?', payload: null });
+    }
+
+    async function executeRegister() {
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
@@ -62,10 +66,13 @@ export default function EventDetail() {
         setIsSubmitting(false);
     }
 
-    async function handlePurchase(item) {
+    function promptPurchase(item) {
         const qty = purchaseQuantities[item._id] || 1;
         const totalCost = item.price * qty;
-        if (!confirm(`Confirm purchase of ${qty} x ${item.name} for Rs. ${totalCost}?`)) return;
+        setConfirmConfig({ action: 'purchase', message: `Confirm purchase of ${qty} x ${item.name} for Rs. ${totalCost}?`, payload: { item, qty } });
+    }
+
+    async function executePurchase(item, qty) {
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
@@ -294,7 +301,7 @@ export default function EventDetail() {
                                                                     value={purchaseQuantities[item._id] || 1}
                                                                     onChange={e => setPurchaseQuantities({ ...purchaseQuantities, [item._id]: parseInt(e.target.value) })}
                                                                     style={{ width: '50px', padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                                                                <button onClick={() => handlePurchase(item)} disabled={isSubmitting}
+                                                                <button onClick={() => promptPurchase(item)} disabled={isSubmitting}
                                                                     style={{ padding: '5px 12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
                                                                     Buy
                                                                 </button>
@@ -399,7 +406,7 @@ export default function EventDetail() {
                                                 </div>
                                             )}
 
-                                            <button onClick={handleRegister} disabled={isSubmitting}
+                                            <button onClick={promptRegister} disabled={isSubmitting}
                                                 style={{
                                                     fontSize: '16px', padding: '12px 24px',
                                                     background: '#337ab7', color: 'white', border: 'none',
@@ -474,6 +481,33 @@ export default function EventDetail() {
                     <FeedbackForm eventId={event._id} />
                 )}
             </div>
+
+            {/* Custom Modal for Confirmations */}
+            {confirmConfig && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '450px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Confirm Action</h3>
+                        <p style={{ margin: 0, color: '#555', fontSize: '16px', lineHeight: '1.5' }}>{confirmConfig.message}</p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button onClick={() => setConfirmConfig(null)} disabled={isSubmitting}
+                                style={{ padding: '10px 20px', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Cancel
+                            </button>
+                            <button onClick={() => {
+                                if (confirmConfig.action === 'register') executeRegister();
+                                else if (confirmConfig.action === 'purchase') executePurchase(confirmConfig.payload.item, confirmConfig.payload.qty);
+                                setConfirmConfig(null);
+                            }} disabled={isSubmitting}
+                                style={{ padding: '10px 20px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                {isSubmitting ? 'Processing...' : 'Confirm'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
