@@ -111,6 +111,12 @@ export default function CreateEvent() {
 
     return (
         <div style={{ maxWidth: '800px', margin: '20px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
+            <div style={{ padding: '10px 15px', marginBottom: '20px', background: '#f5f5f5', color: '#333', border: '1px solid #eee', borderRadius: '4px', fontSize: '13px' }}>
+                <strong>Editing Rules & Actions:</strong><br />
+                Draft (free edits, can be published); Published (description update, extend deadline, increase limit, close registrations); Ongoing/Completed (no edits except status change, can be marked completed or closed).
+                <br /><br />
+                <strong>Form Builder:</strong> Organizers can create custom registration forms for events. Supports various field types (text, dropdown, checkbox, file upload, etc.), mark fields as required/flexible, and reorder fields. Forms are locked after the first registration is received.
+            </div>
             <h1 style={{ borderBottom: '1px solid #eee', paddingBottom: '10px' }}>Create New Event</h1>
 
             {status && (
