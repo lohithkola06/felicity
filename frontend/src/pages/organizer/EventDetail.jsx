@@ -114,6 +114,10 @@ export default function OrgEventDetail() {
                                 Edit Event
                             </Link>
                         )}
+                        <Link to={`/organizer/events/${id}/attendance`}
+                            style={{ padding: '8px 16px', background: '#5bc0de', color: '#fff', borderRadius: '4px', textDecoration: 'none', fontSize: '13px' }}>
+                            View Attendance
+                        </Link>
                         {(statusActions[event.status] || []).map(action => (
                             <button key={action.status}
                                 onClick={() => handleStatusChange(action.status)}

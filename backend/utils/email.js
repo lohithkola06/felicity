@@ -47,8 +47,7 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
                     <h2>You're registered! 🎉</h2>
                     <p>Event: <strong>${eventName}</strong></p>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
-                    <p>Show this QR code at the venue:</p>
-                    <img src="${qrCodeDataUrl}" alt="QR Code" style="width:200px;height:200px;" />
+                    <p>You can view your Ticket and QR Code anytime in your Participant Dashboard.</p>
                     <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
@@ -77,7 +76,7 @@ async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) 
                     <p>Event: <strong>${eventName}</strong></p>
                     <p>Item: <strong>${itemName}</strong></p>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
-                    <img src="${qrCodeDataUrl}" alt="QR Code" style="width:200px;height:200px;" />
+                    <p>You can view your QR Code anytime in your Participant Dashboard.</p>
                     <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,

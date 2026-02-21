@@ -49,6 +49,7 @@ export default function Navbar() {
                                 <>
                                     <li><Link to="/organizer/dashboard" onClick={closeMenu} style={{ color: '#ccc' }}>Dashboard</Link></li>
                                     <li><Link to="/organizer/events/new" onClick={closeMenu} style={{ color: '#ccc' }}>Create Event</Link></li>
+                                    <li><Link to="/organizer/scan" onClick={closeMenu} style={{ color: '#ccc' }}>QR Scanner</Link></li>
                                     <li><Link to="/organizer/profile" onClick={closeMenu} style={{ color: '#ccc' }}>Profile</Link></li>
                                     <li><Link to="/events?status=ongoing" onClick={closeMenu} style={{ color: '#ccc' }}>Ongoing Events</Link></li>
                                 </>
