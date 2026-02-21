@@ -59,7 +59,16 @@ export default function QRScanner() {
         setLoading(true);
         setResult(null);
         try {
-            const res = await api.post('/attendance/mark', { ticketId: tid });
+            // QR codes store JSON like {"ticketId":"TKT-...","event":"...","participant":"..."}
+            // Extract just the ticketId from the decoded data
+            let extractedId = tid;
+            try {
+                const parsed = JSON.parse(tid);
+                if (parsed.ticketId) extractedId = parsed.ticketId;
+            } catch (e) {
+                // Not JSON — treat as raw ticket ID (manual entry)
+            }
+            const res = await api.post('/attendance/mark', { ticketId: extractedId });
             setResult({ type: 'success', message: res.data.message || 'Attendance marked!', details: res.data });
         } catch (err) {
             const msg = err.response?.data?.error || 'Could not mark attendance.';
