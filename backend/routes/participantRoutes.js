@@ -48,7 +48,22 @@ router.get('/dashboard', async (req, res) => {
             }
         }
 
-        res.json({ upcoming, history: { normal, merchandise, completed, cancelled } });
+        // fetch pending invites
+        const Team = mongoose.model('Team'); // Need to load Team since it wasn't required at the top
+        const pendingTeams = await Team.find({
+            'members.user': req.user._id,
+            'members.status': 'pending'
+        }).populate('event', 'name').populate('leader', 'firstName lastName email');
+
+        const myInvites = pendingTeams.map(t => ({
+            teamId: t._id,
+            teamName: t.name,
+            eventName: t.event?.name || 'Unknown',
+            leaderName: t.leader ? `${t.leader.firstName} ${t.leader.lastName}` : 'Unknown',
+            leaderEmail: t.leader?.email || ''
+        }));
+
+        res.json({ upcoming, history: { normal, merchandise, completed, cancelled }, invites: myInvites });
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'failed to load dashboard' });

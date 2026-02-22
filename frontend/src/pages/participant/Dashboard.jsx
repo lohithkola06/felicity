@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 
 export default function ParticipantDashboard() {
-    const [data, setData] = useState({ upcoming: [], history: { normal: [], merchandise: [], completed: [], cancelled: [] } });
+    const [data, setData] = useState({ upcoming: [], history: { normal: [], merchandise: [], completed: [], cancelled: [] }, invites: [] });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
     const [confirmCancel, setConfirmCancel] = useState(null);
     const [viewTicket, setViewTicket] = useState(null);
+    const [inviteActionConfig, setInviteActionConfig] = useState(null);
 
     useEffect(() => {
         fetchDashboard();
@@ -23,6 +24,22 @@ export default function ParticipantDashboard() {
             setLoading(false);
         }
     };
+
+    async function handleInviteResponse(teamId, action) {
+        setInviteActionConfig({ teamId, action });
+    }
+
+    async function executeInviteResponse() {
+        if (!inviteActionConfig) return;
+        try {
+            await api.post(`/teams/${inviteActionConfig.teamId}/${inviteActionConfig.action}`);
+            fetchDashboard();
+        } catch (err) {
+            alert(err.response?.data?.error || 'Action failed');
+        } finally {
+            setInviteActionConfig(null);
+        }
+    }
 
     function promptCancel(regId) {
         setConfirmCancel(regId);
@@ -47,6 +64,7 @@ export default function ParticipantDashboard() {
     else if (activeTab === 'merchandise') items = data.history?.merchandise || [];
     else if (activeTab === 'completed') items = data.history?.completed || [];
     else if (activeTab === 'cancelled') items = data.history?.cancelled || [];
+    const invites = data.invites || [];
 
     const tabs = [
         { key: 'upcoming', label: 'Upcoming' },
@@ -59,6 +77,35 @@ export default function ParticipantDashboard() {
     return (
         <div style={{ maxWidth: '960px', margin: '0 auto', padding: '20px' }}>
             <h1>My Dashboard</h1>
+
+            {/* Pending Invites */}
+            {invites.length > 0 && (
+                <div style={{ marginBottom: '25px', background: '#fff8e1', padding: '15px 20px', border: '1px solid #ffecb3', borderRadius: '8px' }}>
+                    <h3 style={{ marginTop: 0, marginBottom: '15px', color: '#f57f17', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>Pending Team Invites</span>
+                        <span style={{ background: '#f57f17', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '12px' }}>{invites.length}</span>
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                        {invites.map(inv => (
+                            <div key={inv.teamId} style={{ background: '#fff', border: '1px solid #ffe082', borderRadius: '6px', padding: '15px' }}>
+                                <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '5px' }}>{inv.teamName}</div>
+                                <div style={{ fontSize: '13px', color: '#666', marginBottom: '5px' }}>Event: <strong>{inv.eventName}</strong></div>
+                                <div style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}>Invited by: {inv.leaderName}</div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button onClick={() => handleInviteResponse(inv.teamId, 'accept')}
+                                        style={{ flex: 1, padding: '8px', background: '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+                                        Accept
+                                    </button>
+                                    <button onClick={() => handleInviteResponse(inv.teamId, 'decline')}
+                                        style={{ flex: 1, padding: '8px', background: '#fff', color: '#f44336', border: '1px solid #f44336', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px' }}>
+                                        Decline
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Tab Navigation */}
             <div style={{ marginBottom: '20px', borderBottom: '2px solid #ccc', display: 'flex', gap: '5px' }}>
@@ -169,6 +216,31 @@ export default function ParticipantDashboard() {
                             <button onClick={executeCancel}
                                 style={{ padding: '8px 16px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                                 Yes, Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Custom Modal for Invite Responses */}
+            {inviteActionConfig && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+                }}>
+                    <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                        <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Confirm Action</h3>
+                        <p style={{ margin: 0, color: '#555', fontSize: '15px', lineHeight: '1.5' }}>
+                            Are you sure you want to {inviteActionConfig.action} this invite?
+                        </p>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                            <button onClick={() => setInviteActionConfig(null)}
+                                style={{ padding: '8px 16px', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Cancel
+                            </button>
+                            <button onClick={executeInviteResponse}
+                                style={{ padding: '8px 16px', background: inviteActionConfig.action === 'decline' ? '#f44336' : '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+                                Yes, {inviteActionConfig.action}
                             </button>
                         </div>
                     </div>

@@ -119,15 +119,38 @@ export default function EventDetail() {
 
     async function handleCreateTeam(e) {
         e.preventDefault();
+
+        // 1. Validate custom form fields
+        for (const field of event.customForm || []) {
+            if (field.required && !formResponses[field.label]) {
+                if (field.fieldType === 'checkbox' && formResponses[field.label]?.length === 0) continue; // Allow empty checkboxes unless handled differently, though handled by HTML required mostly. Here we check explicitly for "file" which is often bypassed by basic HTML if not careful.
+                if (field.fieldType === 'file' && !formResponses[field.label]) {
+                    return alert(`Please upload the required file for: ${field.label}`);
+                }
+                if (!formResponses[field.label] && formResponses[field.label] !== false) {
+                    return alert(`Please fill in the required field: ${field.label}`);
+                }
+            }
+        }
+
+        // 2. Validate Team Emails count
         if (!teamName.trim()) return alert('Team name required');
+
+        const memberEmails = teamEmails.split(',').map(e => e.trim()).filter(Boolean);
+        const expectedInvites = teamSize - 1;
+
+        if (memberEmails.length !== expectedInvites) {
+            return alert(`For a team size of ${teamSize}, you must invite exactly ${expectedInvites} members. You have provided ${memberEmails.length} emails.`);
+        }
+
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
-            const memberEmails = teamEmails.split(',').map(e => e.trim()).filter(Boolean);
             await api.post(`/teams/${id}/create`, {
                 name: teamName.trim(),
                 memberEmails,
                 maxSize: teamSize,
+                formResponses,
             });
             setStatusMessage({ type: 'success', text: 'Team created! Invites sent to members. Go to My Teams to manage.' });
             setShowTeamForm(false);
@@ -428,8 +451,12 @@ export default function EventDetail() {
                                                                             try {
                                                                                 const formData = new FormData();
                                                                                 formData.append('file', file);
+                                                                                const token = localStorage.getItem('token');
                                                                                 const uploadRes = await api.post('/upload', formData, {
-                                                                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                                                                    headers: {
+                                                                                        'Content-Type': 'multipart/form-data',
+                                                                                        'Authorization': token ? `Bearer ${token}` : ''
+                                                                                    }
                                                                                 });
                                                                                 setFormResponses(prev => ({ ...prev, [field.label]: uploadRes.data.url }));
                                                                             } catch (err) {
@@ -452,24 +479,31 @@ export default function EventDetail() {
                                                 </div>
                                             )}
 
-                                            <button onClick={promptRegister} disabled={isSubmitting || Object.values(uploadingFields).some(v => v)}
-                                                style={{
-                                                    fontSize: '16px', padding: '12px 24px',
-                                                    background: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? '#999' : '#337ab7', color: 'white', border: 'none',
-                                                    borderRadius: '4px', cursor: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? 'not-allowed' : 'pointer', width: '100%',
-                                                }}>
-                                                {isSubmitting ? 'Registering...' : Object.values(uploadingFields).some(v => v) ? 'Waiting for uploads...' : event.registrationFee > 0 ? 'Register & Pay Fee' : 'Register Now'}
-                                            </button>
+                                            {/* Standard Registration (hidden for Team Events) */}
+                                            {!event.isTeamEvent && (
+                                                <button onClick={promptRegister} disabled={isSubmitting || Object.values(uploadingFields).some(v => v)}
+                                                    style={{
+                                                        fontSize: '16px', padding: '12px 24px',
+                                                        background: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? '#999' : '#337ab7', color: 'white', border: 'none',
+                                                        borderRadius: '4px', cursor: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? 'not-allowed' : 'pointer', width: '100%',
+                                                    }}>
+                                                    {isSubmitting ? 'Registering...' : Object.values(uploadingFields).some(v => v) ? 'Waiting for uploads...' : event.registrationFee > 0 ? 'Register & Pay Fee' : 'Register Now'}
+                                                </button>
+                                            )}
 
                                             {/* Team Registration Option */}
-                                            <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                                                <button onClick={() => setShowTeamForm(!showTeamForm)}
-                                                    style={{ background: 'none', border: 'none', color: '#337ab7', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
-                                                    {showTeamForm ? 'Cancel team registration' : 'Or register as a team'}
-                                                </button>
+                                            <div style={{ marginTop: event.isTeamEvent ? '0' : '15px', textAlign: event.isTeamEvent ? 'left' : 'center' }}>
+                                                {event.isTeamEvent ? (
+                                                    <h3 style={{ marginTop: '0', marginBottom: '10px' }}>Register as a Team</h3>
+                                                ) : (
+                                                    <button onClick={() => setShowTeamForm(!showTeamForm)}
+                                                        style={{ background: 'none', border: 'none', color: '#337ab7', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
+                                                        {showTeamForm ? 'Cancel team registration' : 'Or register as a team'}
+                                                    </button>
+                                                )}
                                             </div>
 
-                                            {showTeamForm && (
+                                            {(showTeamForm || event.isTeamEvent) && (
                                                 <form onSubmit={handleCreateTeam} style={{ marginTop: '15px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
                                                     <h4 style={{ marginTop: 0 }}>Create a Team</h4>
                                                     <div style={{ marginBottom: '10px' }}>
@@ -479,8 +513,11 @@ export default function EventDetail() {
                                                     </div>
                                                     <div style={{ marginBottom: '10px' }}>
                                                         <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Team Size</label>
-                                                        <input type="number" min="2" max="10" value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value))}
-                                                            style={{ width: '80px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                                        <select value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value))} style={{ width: '100px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
+                                                            {Array.from({ length: (event.maxTeamSize || 10) - (event.minTeamSize || 2) + 1 }, (_, i) => i + (event.minTeamSize || 2)).map(size => (
+                                                                <option key={size} value={size}>{size} members</option>
+                                                            ))}
+                                                        </select>
                                                     </div>
                                                     <div style={{ marginBottom: '10px' }}>
                                                         <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Invite Members (comma-separated emails)</label>

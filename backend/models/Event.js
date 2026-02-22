@@ -14,6 +14,9 @@ const eventSchema = new mongoose.Schema({
     registrationLimit: { type: Number, default: 0 }, // 0 means no cap
     registrationFee: { type: Number, default: 0 },
     registrationCount: { type: Number, default: 0 },
+    isTeamEvent: { type: Boolean, default: false },
+    minTeamSize: { type: Number, default: 2 },
+    maxTeamSize: { type: Number, default: 4 },
     tags: [String],
     venue: String, // physical location
     platform: String, // online link if virtual

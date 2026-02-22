@@ -21,6 +21,9 @@ export default function EditEvent() {
     const [submitting, setSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
     const [statusUpdating, setStatusUpdating] = useState(false);
+    const [isTeamEvent, setIsTeamEvent] = useState(false);
+    const [minTeamSize, setMinTeamSize] = useState(2);
+    const [maxTeamSize, setMaxTeamSize] = useState(4);
 
     function toLocalDatetimeString(isoStr) {
         if (!isoStr) return '';
@@ -48,6 +51,9 @@ export default function EditEvent() {
             });
             setCustomForm(d.customForm || []);
             setMerchItems(d.merchandiseItems || []);
+            setIsTeamEvent(!!d.isTeamEvent);
+            setMinTeamSize(d.minTeamSize || 2);
+            setMaxTeamSize(d.maxTeamSize || 4);
             setLoading(false);
         }).catch(() => navigate('/organizer/events'));
     }, [id, navigate]);
@@ -116,7 +122,12 @@ export default function EditEvent() {
                     registrationFee: parseInt(form.registrationFee) || 0,
                     tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
                     customForm: form.type === 'normal' ? customForm : [],
+                    isTeamEvent: form.type === 'normal' ? isTeamEvent : false,
                 });
+                if (form.type === 'normal' && isTeamEvent) {
+                    payload.minTeamSize = minTeamSize;
+                    payload.maxTeamSize = maxTeamSize;
+                }
                 if (form.startDate) payload.startDate = new Date(form.startDate).toISOString();
                 if (form.endDate) payload.endDate = new Date(form.endDate).toISOString();
                 if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
@@ -251,6 +262,36 @@ export default function EditEvent() {
                     {form.type === 'normal' && (
                         <div style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
                             <h3>Logistics</h3>
+
+                            {/* Team Options */}
+                            <div style={{ marginBottom: '15px', padding: '15px', background: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd' }}>
+                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', cursor: isDraft ? 'pointer' : 'not-allowed', marginBottom: isTeamEvent ? '15px' : '0' }}>
+                                    <input type="checkbox" checked={isTeamEvent} onChange={e => setIsTeamEvent(e.target.checked)} disabled={!isDraft} />
+                                    This is a Team Event
+                                </label>
+
+                                {isTeamEvent && (
+                                    <div style={{ display: 'flex', gap: '20px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Minimum Team Size</label>
+                                            {isDraft ? (
+                                                <input type="number" min="2" max="50" value={minTeamSize} onChange={e => setMinTeamSize(parseInt(e.target.value))} required={isTeamEvent} style={{ width: '100%', padding: '8px' }} />
+                                            ) : (
+                                                <div style={{ padding: '8px', background: '#e9ecef', borderRadius: '4px', color: '#666' }}>{minTeamSize}</div>
+                                            )}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Maximum Team Size</label>
+                                            {isDraft ? (
+                                                <input type="number" min={Math.max(2, minTeamSize)} max="50" value={maxTeamSize} onChange={e => setMaxTeamSize(parseInt(e.target.value))} required={isTeamEvent} style={{ width: '100%', padding: '8px' }} />
+                                            ) : (
+                                                <div style={{ padding: '8px', background: '#e9ecef', borderRadius: '4px', color: '#666' }}>{maxTeamSize}</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{ marginBottom: '15px' }}>
                                 <label style={{ display: 'block', marginBottom: '5px' }}>Venue</label>
                                 {isDraft ? (

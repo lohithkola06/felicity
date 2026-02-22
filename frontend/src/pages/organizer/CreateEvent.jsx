@@ -118,9 +118,14 @@ export default function CreateEvent() {
 
                 delete payload.venue;
                 delete payload.registrationFee;
-            } else {
+            } else { // This block is for form.type === 'normal'
                 delete payload.purchaseLimitPerUser;
                 payload.customForm = customForm;
+                payload.isTeamEvent = isTeamEvent;
+                if (isTeamEvent) {
+                    payload.minTeamSize = minTeamSize;
+                    payload.maxTeamSize = maxTeamSize;
+                }
             }
 
             // Send to backend
@@ -227,6 +232,28 @@ export default function CreateEvent() {
                 {form.type === 'normal' && (
                     <div style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
                         <h3>Logistics</h3>
+
+                        {/* Team Options */}
+                        <div style={{ marginBottom: '15px', padding: '15px', background: '#f5f5f5', borderRadius: '4px', border: '1px solid #ddd' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', cursor: 'pointer', marginBottom: isTeamEvent ? '15px' : '0' }}>
+                                <input type="checkbox" checked={isTeamEvent} onChange={e => setIsTeamEvent(e.target.checked)} />
+                                This is a Team Event
+                            </label>
+
+                            {isTeamEvent && (
+                                <div style={{ display: 'flex', gap: '20px' }}>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Minimum Team Size</label>
+                                        <input type="number" min="2" max="50" value={minTeamSize} onChange={e => setMinTeamSize(parseInt(e.target.value))} required={isTeamEvent} style={{ width: '100%', padding: '8px' }} />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ display: 'block', marginBottom: '5px', fontSize: '13px' }}>Maximum Team Size</label>
+                                        <input type="number" min={Math.max(2, minTeamSize)} max="50" value={maxTeamSize} onChange={e => setMaxTeamSize(parseInt(e.target.value))} required={isTeamEvent} style={{ width: '100%', padding: '8px' }} />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
                         <div style={{ marginBottom: '15px' }}>
                             <label style={{ display: 'block', marginBottom: '5px' }}>Venue</label>
                             <input type="text" style={{ width: '100%', padding: '8px' }} required

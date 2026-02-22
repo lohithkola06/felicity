@@ -19,8 +19,13 @@ router.post('/:eventId/create', auth, authorize('participant'), async (req, res)
         const existing = await Team.findOne({ event: event._id, leader: req.user._id });
         if (existing) return res.status(400).json({ error: 'you already have a team for this event' });
 
-        const { name, memberEmails, maxSize } = req.body;
+        const { name, memberEmails, maxSize, formResponses } = req.body;
         if (!name) return res.status(400).json({ error: 'team name required' });
+
+        // Ensure email matches aren't self
+        if (memberEmails && memberEmails.includes(req.user.email)) {
+            return res.status(400).json({ error: 'cannot invite yourself' });
+        }
 
         // look up invited members
         const members = [];
@@ -35,13 +40,15 @@ router.post('/:eventId/create', auth, authorize('participant'), async (req, res)
             }
         }
 
-        const team = await Team.create({
+        const team = new Team({
             event: event._id,
             name,
             leader: req.user._id,
             members,
-            maxSize: maxSize || 4,
+            maxSize: maxSize || 4, // Fallback, though we should use event limits if available
+            formResponses: formResponses || {},
         });
+        await team.save();
 
         res.status(201).json(team);
     } catch (err) {
@@ -174,6 +181,7 @@ router.post('/:teamId/register', auth, authorize('participant'), async (req, res
                 team: team._id,
                 ticketId, qrCode,
                 paymentStatus: event.registrationFee > 0 ? 'pending' : 'paid',
+                formResponses: team.formResponses || {},
             });
             registrations.push(reg);
         }
