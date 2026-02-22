@@ -49,6 +49,23 @@ export default function EventDetail() {
     }
 
     function promptRegister() {
+        if (event.customForm && event.customForm.length > 0) {
+            for (const field of event.customForm) {
+                if (!field.required) continue;
+                const val = formResponses[field.label];
+                if (field.fieldType === 'checkbox') {
+                    if (!val || !Array.isArray(val) || val.length === 0) {
+                        setStatusMessage({ type: 'error', text: `Please complete the required field: "${field.label}"` });
+                        return;
+                    }
+                } else {
+                    if (!val || (typeof val === 'string' && !val.trim())) {
+                        setStatusMessage({ type: 'error', text: `Please complete the required field: "${field.label}"` });
+                        return;
+                    }
+                }
+            }
+        }
         setConfirmConfig({ action: 'register', message: 'Are you sure you want to register for this event?', payload: null });
     }
 

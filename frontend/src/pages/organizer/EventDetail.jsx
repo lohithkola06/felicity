@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 
@@ -12,6 +12,7 @@ export default function OrgEventDetail() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [loading, setLoading] = useState(true);
     const [statusUpdating, setStatusUpdating] = useState(false);
+    const [expandedRows, setExpandedRows] = useState({});
 
     useEffect(() => {
         fetchAll();
@@ -262,13 +263,20 @@ export default function OrgEventDetail() {
                                     <th style={{ padding: '10px', border: '1px solid #ddd' }}>Payment</th>
                                     <th style={{ padding: '10px', border: '1px solid #ddd' }}>Team</th>
                                     <th style={{ padding: '10px', border: '1px solid #ddd' }}>Attendance</th>
+                                    {event.customForm && event.customForm.length > 0 && (
+                                        <th style={{ padding: '10px', border: '1px solid #ddd' }}>Form</th>
+                                    )}
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredParticipants.map(r => {
                                     const p = r.participant;
+                                    const hasResponses = r.formResponses && Object.keys(r.formResponses).length > 0;
+                                    const isExpanded = expandedRows[r._id];
+                                    const colCount = 6 + (event.customForm && event.customForm.length > 0 ? 1 : 0);
                                     return (
-                                        <tr key={r._id}>
+                                        <React.Fragment key={r._id}>
+                                        <tr>
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {p ? `${p.firstName || ''} ${p.lastName || ''}`.trim() : 'Unknown'}
                                             </td>
@@ -291,7 +299,35 @@ export default function OrgEventDetail() {
                                             <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                                 {r.attended ? 'Yes' : 'No'}
                                             </td>
+                                            {event.customForm && event.customForm.length > 0 && (
+                                                <td style={{ padding: '10px', border: '1px solid #ddd', textAlign: 'center' }}>
+                                                    {hasResponses ? (
+                                                        <button onClick={() => setExpandedRows(prev => ({ ...prev, [r._id]: !prev[r._id] }))}
+                                                            style={{ padding: '3px 10px', fontSize: '12px', cursor: 'pointer', background: isExpanded ? '#337ab7' : '#eee', color: isExpanded ? '#fff' : '#333', border: '1px solid #ccc', borderRadius: '3px' }}>
+                                                            {isExpanded ? 'Hide' : 'View'}
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ color: '#999', fontSize: '11px' }}>N/A</span>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
+                                        {isExpanded && hasResponses && (
+                                            <tr>
+                                                <td colSpan={colCount} style={{ padding: '12px 20px', background: '#f9f9f9', border: '1px solid #ddd' }}>
+                                                    <strong style={{ fontSize: '12px', color: '#555', display: 'block', marginBottom: '8px' }}>Form Responses</strong>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '8px' }}>
+                                                        {Object.entries(r.formResponses).map(([key, val]) => (
+                                                            <div key={key} style={{ fontSize: '13px' }}>
+                                                                <span style={{ color: '#888', fontWeight: 'bold' }}>{key}:</span>{' '}
+                                                                {Array.isArray(val) ? val.join(', ') : String(val)}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                        </React.Fragment>
                                     );
                                 })}
                             </tbody>

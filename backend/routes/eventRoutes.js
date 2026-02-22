@@ -449,6 +449,22 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
         if (event.eligibility === 'iiit-only' && req.user.participantType !== 'iiit')
             return res.status(400).json({ error: 'This event is restricted to IIIT students only.' });
 
+        // Validate required custom form fields
+        if (event.customForm && event.customForm.length > 0) {
+            const responses = req.body.formResponses || {};
+            for (const field of event.customForm) {
+                if (!field.required) continue;
+                const val = responses[field.label];
+                if (field.fieldType === 'checkbox') {
+                    if (!val || !Array.isArray(val) || val.length === 0)
+                        return res.status(400).json({ error: `Required field "${field.label}" is missing.` });
+                } else {
+                    if (!val || (typeof val === 'string' && !val.trim()))
+                        return res.status(400).json({ error: `Required field "${field.label}" is missing.` });
+                }
+            }
+        }
+
         // Check for double registration
         let registration = await Registration.findOne({ event: event._id, participant: req.user._id });
         if (registration) {
