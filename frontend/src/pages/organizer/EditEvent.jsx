@@ -83,13 +83,6 @@ export default function EditEvent() {
         setCustomForm(newForm);
     }
 
-    function updateFieldOptions(i, optionsStr) {
-        if (form.formLocked) return;
-        const u = [...customForm];
-        u[i].options = optionsStr.split(',').map(o => o.trim()).filter(Boolean);
-        setCustomForm(u);
-    }
-
     // Status change handler
     async function handleStatusChange(newStatus) {
         if (!window.confirm(`Change status to "${newStatus}"?`)) return;
@@ -338,12 +331,51 @@ export default function EditEvent() {
 
                                     {/* Options for dropdown/checkbox */}
                                     {(field.fieldType === 'dropdown' || field.fieldType === 'checkbox') && (
-                                        <div style={{ marginBottom: '8px' }}>
-                                            <label style={{ fontSize: '11px', color: '#888' }}>Options (comma separated)</label>
-                                            <input type="text" value={(field.options || []).join(', ')} disabled={form.formLocked}
-                                                onChange={e => updateFieldOptions(i, e.target.value)}
-                                                placeholder="Option 1, Option 2, Option 3"
-                                                style={{ width: '100%', padding: '6px', fontSize: '13px' }} />
+                                        <div style={{ marginBottom: '12px', background: '#f9f9f9', padding: '8px', border: '1px solid #eee', borderRadius: '4px' }}>
+                                            <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '8px', color: form.formLocked ? '#aaa' : '#333' }}>
+                                                Options
+                                            </label>
+                                            {(field.options || []).map((opt, optIndex) => (
+                                                <div key={optIndex} style={{ display: 'flex', gap: '8px', marginBottom: '6px', alignItems: 'center' }}>
+                                                    <input
+                                                        type="text"
+                                                        value={opt}
+                                                        onChange={(e) => {
+                                                            const newOptions = [...(field.options || [])];
+                                                            newOptions[optIndex] = e.target.value;
+                                                            updateField(i, 'options', newOptions);
+                                                        }}
+                                                        disabled={form.formLocked}
+                                                        placeholder={`Option ${optIndex + 1}`}
+                                                        style={{ flex: 1, padding: '6px', fontSize: '13px', border: '1px solid #ccc', borderRadius: '3px' }}
+                                                    />
+                                                    {!form.formLocked && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const newOptions = (field.options || []).filter((_, idx) => idx !== optIndex);
+                                                                updateField(i, 'options', newOptions);
+                                                            }}
+                                                            title="Remove Option"
+                                                            style={{ padding: '4px 8px', background: '#ffebee', color: '#d32f2f', border: '1px solid #ffcdd2', borderRadius: '3px', cursor: 'pointer', fontSize: '12px' }}
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            {!form.formLocked && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newOptions = [...(field.options || []), ''];
+                                                        updateField(i, 'options', newOptions);
+                                                    }}
+                                                    style={{ marginTop: '4px', padding: '4px 10px', fontSize: '12px', background: '#e3f2fd', color: '#1976d2', border: '1px solid #bbdefb', borderRadius: '4px', cursor: 'pointer' }}
+                                                >
+                                                    + Add Option
+                                                </button>
+                                            )}
                                         </div>
                                     )}
 

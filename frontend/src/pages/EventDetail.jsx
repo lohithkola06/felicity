@@ -16,6 +16,7 @@ export default function EventDetail() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [purchaseQuantities, setPurchaseQuantities] = useState({});
     const [formResponses, setFormResponses] = useState({});
+    const [uploadingFields, setUploadingFields] = useState({});
     const [showTeamForm, setShowTeamForm] = useState(false);
     const [teamName, setTeamName] = useState('');
     const [teamEmails, setTeamEmails] = useState('');
@@ -412,10 +413,38 @@ export default function EventDetail() {
                                                             {field.fieldType === 'file' && (
                                                                 <div>
                                                                     <input type="file"
-                                                                        required={field.required}
-                                                                        onChange={e => setFormResponses({ ...formResponses, [field.label]: e.target.files[0]?.name || '' })}
-                                                                        style={{ padding: '4px' }} />
-                                                                    <small style={{ color: '#888', display: 'block', marginTop: '2px' }}>File upload</small>
+                                                                        required={field.required && !formResponses[field.label]}
+                                                                        disabled={uploadingFields[field.label] || isSubmitting}
+                                                                        onChange={async (e) => {
+                                                                            const file = e.target.files[0];
+                                                                            if (!file) {
+                                                                                const newResponses = { ...formResponses };
+                                                                                delete newResponses[field.label];
+                                                                                setFormResponses(newResponses);
+                                                                                return;
+                                                                            }
+
+                                                                            setUploadingFields(prev => ({ ...prev, [field.label]: true }));
+                                                                            try {
+                                                                                const formData = new FormData();
+                                                                                formData.append('file', file);
+                                                                                const uploadRes = await api.post('/upload', formData, {
+                                                                                    headers: { 'Content-Type': 'multipart/form-data' }
+                                                                                });
+                                                                                setFormResponses(prev => ({ ...prev, [field.label]: uploadRes.data.url }));
+                                                                            } catch (err) {
+                                                                                setStatusMessage({ type: 'error', text: 'Failed to upload your file. Please check your connection and try again.' });
+                                                                                e.target.value = null; // Clear input
+                                                                            } finally {
+                                                                                setUploadingFields(prev => ({ ...prev, [field.label]: false }));
+                                                                            }
+                                                                        }}
+                                                                        style={{ padding: '6px', width: '100%', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }} />
+
+                                                                    {uploadingFields[field.label] && <small style={{ color: '#eb9b34', display: 'block', marginTop: '4px', fontWeight: 'bold' }}>Uploading to Cloudinary...</small>}
+                                                                    {formResponses[field.label] && !uploadingFields[field.label] && (
+                                                                        <small style={{ color: '#5cb85c', display: 'block', marginTop: '4px', fontWeight: 'bold' }}>✓ File uploaded successfully</small>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -423,13 +452,13 @@ export default function EventDetail() {
                                                 </div>
                                             )}
 
-                                            <button onClick={promptRegister} disabled={isSubmitting}
+                                            <button onClick={promptRegister} disabled={isSubmitting || Object.values(uploadingFields).some(v => v)}
                                                 style={{
                                                     fontSize: '16px', padding: '12px 24px',
-                                                    background: '#337ab7', color: 'white', border: 'none',
-                                                    borderRadius: '4px', cursor: 'pointer', width: '100%',
+                                                    background: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? '#999' : '#337ab7', color: 'white', border: 'none',
+                                                    borderRadius: '4px', cursor: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? 'not-allowed' : 'pointer', width: '100%',
                                                 }}>
-                                                {isSubmitting ? 'Registering...' : event.registrationFee > 0 ? 'Register & Pay Fee' : 'Register Now'}
+                                                {isSubmitting ? 'Registering...' : Object.values(uploadingFields).some(v => v) ? 'Waiting for uploads...' : event.registrationFee > 0 ? 'Register & Pay Fee' : 'Register Now'}
                                             </button>
 
                                             {/* Team Registration Option */}

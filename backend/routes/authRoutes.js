@@ -37,8 +37,9 @@ router.post('/register', async (req, res) => {
         // Specific validation for IIIT Students
         // We enforce the use of the institute email to automate verification
         if (participantType === 'iiit') {
-            if (!email.match(/@(students\.|research\.)?iiit\.ac\.in$/i)) {
-                return res.status(400).json({ error: 'To register as an IIIT student, you must use your @iiit.ac.in, @students.iiit.ac.in, or @research.iiit.ac.in email.' });
+            const lowerEmail = email.toLowerCase();
+            if (!lowerEmail.endsWith('@iiit.ac.in') && !lowerEmail.endsWith('.iiit.ac.in')) {
+                return res.status(400).json({ error: 'To register as an IIIT student, you must use a valid IIIT email address (e.g., @iiit.ac.in, @something.iiit.ac.in).' });
             }
         }
 

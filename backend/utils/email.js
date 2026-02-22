@@ -38,6 +38,20 @@ async function getTransporter() {
 async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
     try {
         const transport = await getTransporter();
+
+        let attachments = [];
+        if (qrCodeDataUrl) {
+            const base64Data = qrCodeDataUrl.split(',')[1];
+            if (base64Data) {
+                attachments.push({
+                    filename: 'ticket-qr.png',
+                    content: Buffer.from(base64Data, 'base64'),
+                    contentType: 'image/png',
+                    cid: 'qr_code'
+                });
+            }
+        }
+
         const info = await transport.sendMail({
             from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
@@ -47,10 +61,12 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
                     <h2>You're registered! 🎉</h2>
                     <p>Event: <strong>${eventName}</strong></p>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
+                    ${qrCodeDataUrl ? '<div style="margin:20px 0;"><p>Show this QR at entry:</p><img src="cid:qr_code" alt="QR Code" width="220" style="max-width:100%; height:auto;" /></div>' : ''}
                     <p>You can view your Ticket and QR Code anytime in your Participant Dashboard.</p>
                     <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
+            attachments
         });
         // log preview url if using ethereal
         const preview = nodemailer.getTestMessageUrl(info);
@@ -66,6 +82,20 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
 async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) {
     try {
         const transport = await getTransporter();
+
+        let attachments = [];
+        if (qrCodeDataUrl) {
+            const base64Data = qrCodeDataUrl.split(',')[1];
+            if (base64Data) {
+                attachments.push({
+                    filename: 'merch-qr.png',
+                    content: Buffer.from(base64Data, 'base64'),
+                    contentType: 'image/png',
+                    cid: 'qr_code'
+                });
+            }
+        }
+
         const info = await transport.sendMail({
             from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
@@ -76,10 +106,12 @@ async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) 
                     <p>Event: <strong>${eventName}</strong></p>
                     <p>Item: <strong>${itemName}</strong></p>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
+                    ${qrCodeDataUrl ? '<div style="margin:20px 0;"><p>Show this QR for pickup:</p><img src="cid:qr_code" alt="QR Code" width="220" style="max-width:100%; height:auto;" /></div>' : ''}
                     <p>You can view your QR Code anytime in your Participant Dashboard.</p>
                     <p style="color:#888;margin-top:20px;">— Felicity</p>
                 </div>
             `,
+            attachments
         });
         const preview = nodemailer.getTestMessageUrl(info);
         if (preview) console.log('email preview:', preview);
