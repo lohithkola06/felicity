@@ -12,14 +12,6 @@ import { useNavigate } from 'react-router-dom';
  * 
  * Note: All created events start as 'draft' so the organizer can preview them.
  */
-const FIELD_TYPES = [
-    { value: 'text', label: 'Text' },
-    { value: 'textarea', label: 'Long Text' },
-    { value: 'dropdown', label: 'Dropdown' },
-    { value: 'checkbox', label: 'Checkbox' },
-    { value: 'file', label: 'File Upload' },
-];
-
 export default function CreateEvent() {
     const navigate = useNavigate();
     const [status, setStatus] = useState(null); // Feedback for success/error
@@ -44,35 +36,6 @@ export default function CreateEvent() {
 
     // Merch Items State (only used if type === 'merchandise')
     const [merchItems, setMerchItems] = useState([]);
-    const [customForm, setCustomForm] = useState([]);
-
-    function addFormField() {
-        setCustomForm([...customForm, { label: '', fieldType: 'text', required: false, options: [] }]);
-    }
-
-    function removeFormField(index) {
-        setCustomForm(customForm.filter((_, i) => i !== index));
-    }
-
-    function updateField(i, key, val) {
-        const u = [...customForm];
-        u[i][key] = val;
-        setCustomForm(u);
-    }
-
-    function moveField(index, direction) {
-        const newForm = [...customForm];
-        const swapIndex = index + direction;
-        if (swapIndex < 0 || swapIndex >= newForm.length) return;
-        [newForm[index], newForm[swapIndex]] = [newForm[swapIndex], newForm[index]];
-        setCustomForm(newForm);
-    }
-
-    function updateFieldOptions(i, optionsStr) {
-        const u = [...customForm];
-        u[i].options = optionsStr.split(',').map(o => o.trim()).filter(Boolean);
-        setCustomForm(u);
-    }
 
     /**
      * Adds a blank row to the merchandise items list.
@@ -108,12 +71,10 @@ export default function CreateEvent() {
         try {
             // Construct the payload based on event type
             const payload = { ...form };
+            // Parse tags from comma-separated string into an array
             payload.tags = form.tags.split(',').map(t => t.trim()).filter(Boolean);
 
-            if (form.startDate) payload.startDate = new Date(form.startDate).toISOString();
-            if (form.endDate) payload.endDate = new Date(form.endDate).toISOString();
-            if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
-
+            // If it's a merch event, attach the items and limit
             if (form.type === 'merchandise') {
                 if (merchItems.length === 0) {
                     setStatus({ type: 'error', text: 'Please add at least one merchandise item.' });
@@ -123,11 +84,12 @@ export default function CreateEvent() {
                 payload.items = merchItems;
                 payload.purchaseLimitPerUser = parseInt(form.purchaseLimitPerUser) || 1;
 
+                // Cleanup unrelated fields
                 delete payload.venue;
                 delete payload.registrationFee;
             } else {
+                // If it's a normal event, cleanup merch fields
                 delete payload.purchaseLimitPerUser;
-                payload.customForm = customForm;
             }
 
             // Send to backend
@@ -256,71 +218,6 @@ export default function CreateEvent() {
                             <input type="datetime-local" style={{ width: '100%', padding: '8px' }}
                                 value={form.registrationDeadline} onChange={e => setForm({ ...form, registrationDeadline: e.target.value })} />
                         </div>
-                    </div>
-                )}
-
-                {/* Form Builder for Normal Events */}
-                {form.type === 'normal' && (
-                    <div style={{ borderTop: '1px solid #eee', paddingTop: '15px', marginTop: '15px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                            <h3 style={{ margin: 0 }}>Custom Registration Form</h3>
-                        </div>
-                        <p style={{ fontSize: '13px', color: '#888', marginBottom: '15px' }}>
-                            Add custom fields that participants will fill out when registering. The form will be locked after the first registration.
-                        </p>
-
-                        {customForm.map((field, i) => (
-                            <div key={i} style={{
-                                border: '1px solid #ddd', borderRadius: '4px', padding: '12px', marginBottom: '10px', background: '#fff',
-                            }}>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', marginBottom: '8px' }}>
-                                    <div style={{ flex: 2 }}>
-                                        <label style={{ fontSize: '11px', color: '#888' }}>Field Label</label>
-                                        <input type="text" value={field.label}
-                                            onChange={e => updateField(i, 'label', e.target.value)}
-                                            placeholder="e.g. T-shirt size"
-                                            style={{ width: '100%', padding: '6px', fontSize: '13px' }} />
-                                    </div>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ fontSize: '11px', color: '#888' }}>Type</label>
-                                        <select value={field.fieldType}
-                                            onChange={e => updateField(i, 'fieldType', e.target.value)}
-                                            style={{ width: '100%', padding: '6px', fontSize: '13px' }}>
-                                            {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                                        </select>
-                                    </div>
-                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                                        <input type="checkbox" checked={field.required}
-                                            onChange={e => updateField(i, 'required', e.target.checked)} />
-                                        Required
-                                    </label>
-                                </div>
-
-                                {(field.fieldType === 'dropdown' || field.fieldType === 'checkbox') && (
-                                    <div style={{ marginBottom: '8px' }}>
-                                        <label style={{ fontSize: '11px', color: '#888' }}>Options (comma separated)</label>
-                                        <input type="text" value={(field.options || []).join(', ')}
-                                            onChange={e => updateFieldOptions(i, e.target.value)}
-                                            placeholder="Option 1, Option 2, Option 3"
-                                            style={{ width: '100%', padding: '6px', fontSize: '13px' }} />
-                                    </div>
-                                )}
-
-                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                    <button type="button" onClick={() => moveField(i, -1)} disabled={i === 0}
-                                        style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '3px' }}>↑</button>
-                                    <button type="button" onClick={() => moveField(i, 1)} disabled={i === customForm.length - 1}
-                                        style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#eee', border: '1px solid #ccc', borderRadius: '3px' }}>↓</button>
-                                    <button type="button" onClick={() => removeFormField(i)}
-                                        style={{ padding: '3px 8px', fontSize: '12px', cursor: 'pointer', background: '#f2dede', color: '#a94442', border: '1px solid #ebccd1', borderRadius: '3px' }}>Remove</button>
-                                </div>
-                            </div>
-                        ))}
-
-                        <button type="button" onClick={addFormField}
-                            style={{ marginTop: '5px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer', background: '#f5f5f5', border: '1px solid #ccc', borderRadius: '4px' }}>
-                            + Add Field
-                        </button>
                     </div>
                 )}
 

@@ -22,25 +22,14 @@ export default function EditEvent() {
     const [loading, setLoading] = useState(true);
     const [statusUpdating, setStatusUpdating] = useState(false);
 
-    function toLocalDatetimeString(isoStr) {
-        if (!isoStr) return '';
-        const d = new Date(isoStr);
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        const hours = String(d.getHours()).padStart(2, '0');
-        const minutes = String(d.getMinutes()).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-    }
-
     useEffect(() => {
         api.get(`/events/${id}`).then(res => {
             const d = res.data;
             setForm({
                 name: d.name, description: d.description, type: d.type,
-                startDate: toLocalDatetimeString(d.startDate),
-                endDate: toLocalDatetimeString(d.endDate),
-                registrationDeadline: toLocalDatetimeString(d.registrationDeadline),
+                startDate: d.startDate ? d.startDate.slice(0, 16) : '',
+                endDate: d.endDate ? d.endDate.slice(0, 16) : '',
+                registrationDeadline: d.registrationDeadline ? d.registrationDeadline.slice(0, 16) : '',
                 venue: d.venue || '', registrationFee: d.registrationFee || 0, registrationLimit: d.registrationLimit || 0,
                 eligibility: d.eligibility || 'all', tags: d.tags ? d.tags.join(', ') : '', status: d.status,
                 purchaseLimitPerUser: d.purchaseLimitPerUser || 1,
@@ -117,6 +106,7 @@ export default function EditEvent() {
             const payload = {};
 
             if (isDraft) {
+                // Draft: full freedom
                 Object.assign(payload, {
                     ...form,
                     registrationLimit: parseInt(form.registrationLimit) || 0,
@@ -124,14 +114,12 @@ export default function EditEvent() {
                     tags: form.tags.split(',').map(t => t.trim()).filter(Boolean),
                     customForm: form.type === 'normal' ? customForm : [],
                 });
-                if (form.startDate) payload.startDate = new Date(form.startDate).toISOString();
-                if (form.endDate) payload.endDate = new Date(form.endDate).toISOString();
-                if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
                 delete payload.status;
                 delete payload.formLocked;
             } else if (isPublished) {
+                // Published: restricted edits
                 payload.description = form.description;
-                if (form.registrationDeadline) payload.registrationDeadline = new Date(form.registrationDeadline).toISOString();
+                if (form.registrationDeadline) payload.registrationDeadline = form.registrationDeadline;
                 if (form.registrationLimit) payload.registrationLimit = parseInt(form.registrationLimit) || 0;
             }
 
