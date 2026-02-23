@@ -5,6 +5,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useDialog } from '../../context/DialogContext';
 import { openFile } from '../../utils/fileResolver';
 
+const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = error => reject(error);
+});
+
 export default function MyTeams() {
     const { user } = useAuth();
     const [teams, setTeams] = useState([]);
@@ -450,12 +457,14 @@ export default function MyTeams() {
 
                                                                     setUploadingFields(prev => ({ ...prev, [field.label]: true }));
                                                                     try {
-                                                                        const formData = new FormData();
-                                                                        formData.append('file', file);
+                                                                        const base64 = await toBase64(file);
                                                                         const token = localStorage.getItem('token');
-                                                                        const uploadRes = await api.post('/upload', formData, {
+                                                                        const uploadRes = await api.post('/upload', {
+                                                                            filename: file.name,
+                                                                            data: base64,
+                                                                            mimetype: file.type
+                                                                        }, {
                                                                             headers: {
-                                                                                'Content-Type': 'multipart/form-data',
                                                                                 'Authorization': token ? `Bearer ${token}` : ''
                                                                             }
                                                                         });
@@ -593,12 +602,14 @@ export default function MyTeams() {
 
                                                                     setUploadingFields(prev => ({ ...prev, [field.label]: true }));
                                                                     try {
-                                                                        const formData = new FormData();
-                                                                        formData.append('file', file);
+                                                                        const base64 = await toBase64(file);
                                                                         const token = localStorage.getItem('token');
-                                                                        const uploadRes = await api.post('/upload', formData, {
+                                                                        const uploadRes = await api.post('/upload', {
+                                                                            filename: file.name,
+                                                                            data: base64,
+                                                                            mimetype: file.type
+                                                                        }, {
                                                                             headers: {
-                                                                                'Content-Type': 'multipart/form-data',
                                                                                 'Authorization': token ? `Bearer ${token}` : ''
                                                                             }
                                                                         });

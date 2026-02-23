@@ -1,24 +1,67 @@
 const express = require('express');
-const { upload, cloudinary } = require('../utils/cloudinary');
+const { cloudinary } = require('../utils/cloudinary');
 const { auth } = require('../middleware/auth');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const router = express.Router();
 
 // POST /api/upload
-// Accepts a single file under the field name 'file'
+// Accepts base64 encoded file data
 // Returns the secure URL and canonical details provided by Cloudinary
-router.post('/', auth, upload.single('file'), (req, res) => {
+router.post('/', auth, async (req, res) => {
     try {
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded.' });
+        const { filename, data, mimetype } = req.body;
+
+        if (!filename || !data) {
+            return res.status(400).json({ error: 'filename and data (base64) required.' });
         }
+
+        if (!mimetype || (!mimetype.startsWith('image/') && mimetype !== 'application/pdf')) {
+            return res.status(400).json({ error: 'Only images and PDFs are allowed.' });
+        }
+
+        const isPdf = mimetype === 'application/pdf';
+
+        const uploadParams = {
+            folder: 'felicity_events',
+            resource_type: isPdf ? 'raw' : 'auto'
+        };
+
+        let uploadRes;
+
+        if (isPdf) {
+            // Raw files in Cloudinary don't auto-append extensions from base64 streams.
+            // We physically construct a temporary file to bypass corrupted raw deliveries.
+            const safeName = filename.replace(/[^a-zA-Z0-9]/g, '_').replace(/_pdf$/i, '');
+            uploadParams.public_id = `${safeName}_${Date.now()}.pdf`;
+
+            const tempFilePath = path.join(os.tmpdir(), `upload_${Date.now()}_${safeName}.pdf`);
+            // Strip metadata prefix if the frontend sent the complete dataUri instead of raw base64
+            const base64Data = data.replace(/^data:[a-zA-Z0-9\/+-]+;base64,/, '');
+            const buffer = Buffer.from(base64Data, 'base64');
+            fs.writeFileSync(tempFilePath, buffer);
+
+            try {
+                uploadRes = await cloudinary.uploader.upload(tempFilePath, uploadParams);
+            } finally {
+                if (fs.existsSync(tempFilePath)) {
+                    fs.unlinkSync(tempFilePath);
+                }
+            }
+        } else {
+            const dataUri = `data:${mimetype};base64,${data}`;
+            uploadRes = await cloudinary.uploader.upload(dataUri, uploadParams);
+        }
+
         // Extract format (extension) from the filename or mime type
-        const format = req.file.mimetype ? req.file.mimetype.split('/')[1] : req.file.filename.split('.').pop();
+        const format = mimetype ? mimetype.split('/')[1] : filename.split('.').pop();
 
         res.json({
-            url: req.file.path,
-            publicId: req.file.filename,
-            resourceType: req.file.resource_type || 'image', // Default to image (which Cloudinary uses for PDFs via auto)
+            url: uploadRes.secure_url,
+            publicId: uploadRes.public_id,
+            resourceType: uploadRes.resource_type || 'image',
             format: format
         });
     } catch (error) {

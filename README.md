@@ -40,6 +40,7 @@ A full-stack event management platform built for IIIT Hyderabad's fest ecosystem
 | `dotenv` | 17.3 | Loads environment variables from `.env` files. Separates configuration (MongoDB URI, JWT secret, SMTP credentials) from code for security and portability. |
 | `axios` | 1.13 | Used in backend for outbound HTTP requests (Discord webhook notifications). Chosen for its clean promise-based API and automatic JSON handling. |
 | `nodemon` | 3.1 (dev) | Auto-restarts the server on file changes during development. Improves developer experience significantly. |
+| `cloudinary` | 1.41 | Cloudinary SDK for robust media management. Chosen to solve the problem of persistent scalable file storage for user uploads (payment proofs, custom forms) directly from Base64 payloads, bypassing local disk storage constraints. |
 
 ### Frontend Dependencies
 
@@ -51,7 +52,7 @@ A full-stack event management platform built for IIIT Hyderabad's fest ecosystem
 | `axios` | 1.13 | Promise-based HTTP client with request/response interceptors. Interceptors automatically attach JWT tokens to every API request and handle 401 responses. Chosen over fetch() for built-in error handling and request cancellation. |
 | `html5-qrcode` | 2.3 | Browser-based QR code scanning using device camera. Powers the organizer's QR attendance scanner with real-time camera feed and file upload fallback. Works on both desktop and mobile browsers. |
 | `socket.io-client` | 4.8 | Client-side Socket.IO for real-time team chat. Pairs with the backend Socket.IO server for instant message delivery. |
-| `tailwindcss` | 3.4 (dev) | Utility-first CSS framework for rapid UI development. Used alongside inline styles for quick iteration on component layouts and responsive design. |
+| `tailwindcss` | 3.4 (dev) | Utility-first UI framework for rapid UI development. Chosen because it solves the problem of writing and maintaining complex global CSS files by allowing styles to be applied directly within components, ensuring styling consistency and seamless responsive design without UI library bloating. |
 | `vite` | 6.3 (dev) | Next-generation frontend build tool. Provides near-instant hot module replacement (HMR) during development and optimized production builds with code splitting. Chosen over Create React App for significantly faster build times. |
 
 ---

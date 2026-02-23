@@ -6,6 +6,13 @@ import FeedbackForm from '../components/FeedbackForm';
 import { useDialog } from '../context/DialogContext';
 import { openFile } from '../utils/fileResolver';
 
+const toBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = error => reject(error);
+});
+
 export default function EventDetail() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -559,12 +566,14 @@ export default function EventDetail() {
 
                                                                                     setUploadingFields(prev => ({ ...prev, [field.label]: true }));
                                                                                     try {
-                                                                                        const formData = new FormData();
-                                                                                        formData.append('file', file);
+                                                                                        const base64 = await toBase64(file);
                                                                                         const token = localStorage.getItem('token');
-                                                                                        const uploadRes = await api.post('/upload', formData, {
+                                                                                        const uploadRes = await api.post('/upload', {
+                                                                                            filename: file.name,
+                                                                                            data: base64,
+                                                                                            mimetype: file.type
+                                                                                        }, {
                                                                                             headers: {
-                                                                                                'Content-Type': 'multipart/form-data',
                                                                                                 'Authorization': token ? `Bearer ${token}` : ''
                                                                                             }
                                                                                         });
@@ -619,12 +628,23 @@ export default function EventDetail() {
 
                                                                     setUploadingFields(prev => ({ ...prev, paymentProof: true }));
                                                                     try {
+<<<<<<< HEAD
                                                                         const formData = new FormData();
                                                                         formData.append('file', file);
                                                                         const token = localStorage.getItem('token');
                                                                         const uploadRes = await api.post('/upload', formData, {
                                                                             headers: {
                                                                                 'Content-Type': 'multipart/form-data',
+=======
+                                                                        const base64 = await toBase64(file);
+                                                                        const token = localStorage.getItem('token');
+                                                                        const uploadRes = await api.post('/upload', {
+                                                                            filename: file.name,
+                                                                            data: base64,
+                                                                            mimetype: file.type
+                                                                        }, {
+                                                                            headers: {
+>>>>>>> 195c1f4 (feat: Implement base64 file uploads to Cloudinary, replacing `multer` and adding specific PDF handling.)
                                                                                 'Authorization': token ? `Bearer ${token}` : ''
                                                                             }
                                                                         });
@@ -710,9 +730,15 @@ export default function EventDetail() {
                                                                             const file = e.target.files[0];
                                                                             if (!file) return;
                                                                             setUploadingFields(prev => ({ ...prev, paymentProof: true }));
+<<<<<<< HEAD
                                                                             const formData = new FormData(); formData.append('file', file);
                                                                             try {
                                                                                 const res = await api.post('/upload', formData, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+=======
+                                                                            const base64 = await toBase64(file);
+                                                                            try {
+                                                                                const res = await api.post('/upload', { filename: file.name, data: base64, mimetype: file.type }, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+>>>>>>> 195c1f4 (feat: Implement base64 file uploads to Cloudinary, replacing `multer` and adding specific PDF handling.)
                                                                                 setPaymentUploadedPath(res.data.url || res.data);
                                                                             } catch (e) { showAlert('Failed to upload proof!'); e.target.value = null; }
                                                                             finally { setUploadingFields(prev => ({ ...prev, paymentProof: false })); }
