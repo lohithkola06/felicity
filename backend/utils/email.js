@@ -79,7 +79,7 @@ async function sendTicketEmail(to, eventName, ticketId, qrCodeDataUrl) {
 }
 
 // send purchase confirmation for merch
-async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) {
+async function sendMerchEmail(to, eventName, ticketId, itemsList, qrCodeDataUrl) {
     try {
         const transport = await getTransporter();
 
@@ -99,12 +99,15 @@ async function sendMerchEmail(to, eventName, ticketId, itemName, qrCodeDataUrl) 
         const info = await transport.sendMail({
             from: process.env.SMTP_FROM || '"Felicity" <noreply@felicity.app>',
             to,
-            subject: `🛍️ purchase confirmed - ${itemName}`,
+            subject: `🛍️ Merchandise Order Approved - ${eventName}`,
             html: `
                 <div style="font-family:sans-serif;max-width:500px;margin:auto;padding:20px;">
                     <h2>Purchase Confirmed! 🛍️</h2>
                     <p>Event: <strong>${eventName}</strong></p>
-                    <p>Item: <strong>${itemName}</strong></p>
+                    <p>Your merchandise order has been approved. The following items have been secured for you:</p>
+                    <ul>
+                        ${itemsList.map(item => `<li>${item.quantity}x ${item.itemName} ${item.size ? `(${item.size})` : ''}</li>`).join('')}
+                    </ul>
                     <p>Ticket ID: <strong>${ticketId}</strong></p>
                     ${qrCodeDataUrl ? '<div style="margin:20px 0;"><p>Show this QR for pickup:</p><img src="cid:qr_code" alt="QR Code" width="220" style="max-width:100%; height:auto;" /></div>' : ''}
                     <p>You can view your QR Code anytime in your Participant Dashboard.</p>

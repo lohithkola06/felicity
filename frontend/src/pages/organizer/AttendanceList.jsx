@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../api/axios';
+import { useDialog } from '../../context/DialogContext';
 
 export default function AttendanceList() {
     const { id } = useParams();
@@ -11,6 +12,7 @@ export default function AttendanceList() {
     const [manualTicket, setManualTicket] = useState('');
     const [manualReason, setManualReason] = useState('');
     const [msg, setMsg] = useState(null);
+    const { showAlert } = useDialog();
 
     useEffect(() => {
         loadAttendance();
@@ -56,7 +58,7 @@ export default function AttendanceList() {
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            alert('Export failed');
+            showAlert('Export failed');
         }
     }
 

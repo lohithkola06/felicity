@@ -9,6 +9,7 @@ const teamSchema = new mongoose.Schema({
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         email: String, // invited by email
         status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' },
+        formResponses: mongoose.Schema.Types.Mixed, // member's answers to custom form fields
     }],
     status: { type: String, enum: ['forming', 'ready', 'registered'], default: 'forming' },
     maxSize: { type: Number, default: 4 },

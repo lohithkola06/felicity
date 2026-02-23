@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import FeedbackForm from '../components/FeedbackForm';
+import { useDialog } from '../context/DialogContext';
+import { openFile } from '../utils/fileResolver';
 
 export default function EventDetail() {
     const { id } = useParams();
@@ -15,6 +17,7 @@ export default function EventDetail() {
     const [statusMessage, setStatusMessage] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [purchaseQuantities, setPurchaseQuantities] = useState({});
+    const [cartItems, setCartItems] = useState([]); // [{ item, quantity }]
     const [formResponses, setFormResponses] = useState({});
     const [uploadingFields, setUploadingFields] = useState({});
     const [showTeamForm, setShowTeamForm] = useState(false);
@@ -22,6 +25,7 @@ export default function EventDetail() {
     const [teamEmails, setTeamEmails] = useState('');
     const [teamSize, setTeamSize] = useState(4);
     const [confirmConfig, setConfirmConfig] = useState(null);
+    const { showAlert } = useDialog();
 
     useEffect(() => {
         loadEventDetails();
@@ -84,24 +88,63 @@ export default function EventDetail() {
         setIsSubmitting(false);
     }
 
-    function promptPurchase(item) {
+    function handleAddToCart(item) {
         const qty = purchaseQuantities[item._id] || 1;
-        const totalCost = item.price * qty;
-        setConfirmConfig({ action: 'purchase', message: `Confirm purchase of ${qty} x ${item.name} for Rs. ${totalCost}?`, payload: { item, qty } });
+
+        setCartItems(prev => {
+            const existing = prev.find(ci => ci.item._id === item._id);
+            if (existing) {
+                // Update quantity if already in cart
+                return prev.map(ci => ci.item._id === item._id ? { ...ci, quantity: ci.quantity + qty } : ci);
+            } else {
+                return [...prev, { item, quantity: qty }];
+            }
+        });
+
+        // Reset local quantity input
+        setPurchaseQuantities(prev => ({ ...prev, [item._id]: 1 }));
+        showAlert(`Added ${qty} ${item.name} to cart.`);
     }
 
-    async function executePurchase(item, qty) {
+    function handleRemoveFromCart(itemId) {
+        setCartItems(prev => prev.filter(ci => ci.item._id !== itemId));
+    }
+
+    const cartTotal = cartItems.reduce((sum, ci) => sum + (ci.item.price * ci.quantity), 0);
+
+    function promptPlaceOrder() {
+        if (cartItems.length === 0) return showAlert('Your cart is empty.');
+
+        const totalItems = cartItems.reduce((sum, ci) => sum + ci.quantity, 0);
+        setConfirmConfig({
+            action: 'place_order',
+            message: `Place order for ${totalItems} items? Total cost: Rs. ${cartTotal}. This will be sent for approval.`,
+            payload: null
+        });
+    }
+
+    async function executePlaceOrder() {
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
-            await api.post(`/events/${id}/purchase`, {
-                itemName: item.name, size: item.size, color: item.color, variant: item.variant, quantity: qty
-            });
-            setStatusMessage({ type: 'success', text: `Purchased ${qty} x ${item.name}! Ticket & QR code sent to your email.` });
+            const itemsPayload = cartItems.map(ci => ({
+                item: {
+                    name: ci.item.name,
+                    size: ci.item.size,
+                    color: ci.item.color,
+                    variant: ci.item.variant
+                },
+                quantity: ci.quantity
+            }));
+
+            await api.post(`/events/${id}/purchase`, { items: itemsPayload });
+
+            setStatusMessage({ type: 'success', text: `Order placed successfully! It is pending approval. You can view its status in your Dashboard.` });
+            setCartItems([]); // Clear cart
             loadEventDetails();
             loadMyStatus();
         } catch (err) {
-            setStatusMessage({ type: 'error', text: err.response?.data?.error || 'Could not complete purchase.' });
+            setStatusMessage({ type: 'error', text: err.response?.data?.error || 'Could not place order.' });
         }
         setIsSubmitting(false);
     }
@@ -125,22 +168,22 @@ export default function EventDetail() {
             if (field.required && !formResponses[field.label]) {
                 if (field.fieldType === 'checkbox' && formResponses[field.label]?.length === 0) continue; // Allow empty checkboxes unless handled differently, though handled by HTML required mostly. Here we check explicitly for "file" which is often bypassed by basic HTML if not careful.
                 if (field.fieldType === 'file' && !formResponses[field.label]) {
-                    return alert(`Please upload the required file for: ${field.label}`);
+                    return showAlert(`Please upload the required file for: ${field.label}`);
                 }
                 if (!formResponses[field.label] && formResponses[field.label] !== false) {
-                    return alert(`Please fill in the required field: ${field.label}`);
+                    return showAlert(`Please fill in the required field: ${field.label}`);
                 }
             }
         }
 
         // 2. Validate Team Emails count
-        if (!teamName.trim()) return alert('Team name required');
+        if (!teamName.trim()) return showAlert('Team name required');
 
         const memberEmails = teamEmails.split(',').map(e => e.trim()).filter(Boolean);
         const expectedInvites = teamSize - 1;
 
         if (memberEmails.length !== expectedInvites) {
-            return alert(`For a team size of ${teamSize}, you must invite exactly ${expectedInvites} members. You have provided ${memberEmails.length} emails.`);
+            return showAlert(`For a team size of ${teamSize}, you must invite exactly ${expectedInvites} members. You have provided ${memberEmails.length} emails.`);
         }
 
         setIsSubmitting(true);
@@ -288,6 +331,13 @@ export default function EventDetail() {
                     </div>
                 )}
 
+                {/* Already in a team (but not registered) banner */}
+                {myStatus?.inTeam && !alreadyRegistered && (
+                    <div style={{ padding: '12px', marginBottom: '15px', background: '#e3f2fd', border: '1px solid #90caf9', borderRadius: '4px', color: '#1565c0' }}>
+                        You are already part of a team for this event. Visit <Link to="/teams" style={{ fontWeight: 'bold', textDecoration: 'underline' }}>My Teams</Link> to manage your team or finalize registration.
+                    </div>
+                )}
+
                 {/* Blocking Messages */}
                 {deadlinePassed && !alreadyRegistered && (
                     <div style={{ padding: '12px', marginBottom: '15px', background: '#f2dede', border: '1px solid #ebccd1', borderRadius: '4px', color: '#a94442' }}>
@@ -342,9 +392,9 @@ export default function EventDetail() {
                                                                     value={purchaseQuantities[item._id] || 1}
                                                                     onChange={e => setPurchaseQuantities({ ...purchaseQuantities, [item._id]: parseInt(e.target.value) })}
                                                                     style={{ width: '50px', padding: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
-                                                                <button onClick={() => promptPurchase(item)} disabled={isSubmitting}
-                                                                    style={{ padding: '5px 12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>
-                                                                    Buy
+                                                                <button onClick={() => handleAddToCart(item)} disabled={isSubmitting}
+                                                                    style={{ padding: '5px 12px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                                                    Add to Cart
                                                                 </button>
                                                             </div>
                                                         ) : (
@@ -357,10 +407,42 @@ export default function EventDetail() {
                                             )}
                                         </tbody>
                                     </table>
+
+                                    {/* Cart Section */}
+                                    {cartItems.length > 0 && (
+                                        <div style={{ marginTop: '30px', padding: '20px', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '8px' }}>
+                                            <h3 style={{ marginTop: 0 }}>Your Cart</h3>
+                                            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 15px 0' }}>
+                                                {cartItems.map((ci, idx) => (
+                                                    <li key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #eee' }}>
+                                                        <div>
+                                                            <span style={{ fontWeight: 'bold' }}>{ci.item.name}</span>
+                                                            <span style={{ color: '#666', fontSize: '12px', marginLeft: '10px' }}>
+                                                                {ci.item.size || ''} {ci.item.color || ''}
+                                                            </span>
+                                                            <div style={{ fontSize: '12px', color: '#555', marginTop: '4px' }}>
+                                                                {ci.quantity} x Rs. {ci.item.price} = Rs. {ci.quantity * ci.item.price}
+                                                            </div>
+                                                        </div>
+                                                        <button onClick={() => handleRemoveFromCart(ci.item._id)} style={{ padding: '4px 8px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                                                            Remove
+                                                        </button>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px solid #ddd', paddingTop: '15px' }}>
+                                                <strong style={{ fontSize: '16px' }}>Total: Rs. {cartTotal}</strong>
+                                                <button onClick={promptPlaceOrder} disabled={isSubmitting}
+                                                    style={{ padding: '10px 20px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+                                                    Place Order
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 /* Normal Event Registration */
-                                !alreadyRegistered && isRegistrationOpen && (
+                                !alreadyRegistered && isRegistrationOpen && !myStatus?.inTeam && (
                                     isFull ? (
                                         <div style={{ textAlign: 'center', background: '#f8f8f8', padding: '20px', border: '1px solid #ddd', borderRadius: '4px' }}>
                                             <h3 style={{ color: '#d9534f' }}>This event is currently full.</h3>
@@ -435,42 +517,51 @@ export default function EventDetail() {
 
                                                             {field.fieldType === 'file' && (
                                                                 <div>
-                                                                    <input type="file"
-                                                                        required={field.required && !formResponses[field.label]}
-                                                                        disabled={uploadingFields[field.label] || isSubmitting}
-                                                                        onChange={async (e) => {
-                                                                            const file = e.target.files[0];
-                                                                            if (!file) {
+                                                                    {formResponses[field.label] ? (
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#e8f5e9', padding: '8px', borderRadius: '4px', border: '1px solid #c8e6c9' }}>
+                                                                            <button type="button" onClick={() => openFile(formResponses[field.label])} style={{ background: 'none', border: 'none', color: '#2e7d32', fontWeight: 'bold', fontSize: '13px', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+                                                                                View Uploaded File
+                                                                            </button>
+                                                                            <button type="button" onClick={() => {
                                                                                 const newResponses = { ...formResponses };
                                                                                 delete newResponses[field.label];
                                                                                 setFormResponses(newResponses);
-                                                                                return;
-                                                                            }
+                                                                            }}
+                                                                                style={{ padding: '2px 8px', background: '#d32f2f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                                                                                Remove
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <>
+                                                                            <input type="file"
+                                                                                required={field.required}
+                                                                                disabled={uploadingFields[field.label] || isSubmitting}
+                                                                                onChange={async (e) => {
+                                                                                    const file = e.target.files[0];
+                                                                                    if (!file) return;
 
-                                                                            setUploadingFields(prev => ({ ...prev, [field.label]: true }));
-                                                                            try {
-                                                                                const formData = new FormData();
-                                                                                formData.append('file', file);
-                                                                                const token = localStorage.getItem('token');
-                                                                                const uploadRes = await api.post('/upload', formData, {
-                                                                                    headers: {
-                                                                                        'Content-Type': 'multipart/form-data',
-                                                                                        'Authorization': token ? `Bearer ${token}` : ''
+                                                                                    setUploadingFields(prev => ({ ...prev, [field.label]: true }));
+                                                                                    try {
+                                                                                        const formData = new FormData();
+                                                                                        formData.append('file', file);
+                                                                                        const token = localStorage.getItem('token');
+                                                                                        const uploadRes = await api.post('/upload', formData, {
+                                                                                            headers: {
+                                                                                                'Content-Type': 'multipart/form-data',
+                                                                                                'Authorization': token ? `Bearer ${token}` : ''
+                                                                                            }
+                                                                                        });
+                                                                                        setFormResponses(prev => ({ ...prev, [field.label]: uploadRes.data }));
+                                                                                    } catch (err) {
+                                                                                        setStatusMessage({ type: 'error', text: 'Failed to upload your file. Please check your connection and try again.' });
+                                                                                        e.target.value = null; // Clear input
+                                                                                    } finally {
+                                                                                        setUploadingFields(prev => ({ ...prev, [field.label]: false }));
                                                                                     }
-                                                                                });
-                                                                                setFormResponses(prev => ({ ...prev, [field.label]: uploadRes.data.url }));
-                                                                            } catch (err) {
-                                                                                setStatusMessage({ type: 'error', text: 'Failed to upload your file. Please check your connection and try again.' });
-                                                                                e.target.value = null; // Clear input
-                                                                            } finally {
-                                                                                setUploadingFields(prev => ({ ...prev, [field.label]: false }));
-                                                                            }
-                                                                        }}
-                                                                        style={{ padding: '6px', width: '100%', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }} />
-
-                                                                    {uploadingFields[field.label] && <small style={{ color: '#eb9b34', display: 'block', marginTop: '4px', fontWeight: 'bold' }}>Uploading to Cloudinary...</small>}
-                                                                    {formResponses[field.label] && !uploadingFields[field.label] && (
-                                                                        <small style={{ color: '#5cb85c', display: 'block', marginTop: '4px', fontWeight: 'bold' }}>✓ File uploaded successfully</small>
+                                                                                }}
+                                                                                style={{ padding: '6px', width: '100%', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }} />
+                                                                            {uploadingFields[field.label] && <small style={{ color: '#eb9b34', display: 'block', marginTop: '4px', fontWeight: 'bold' }}>Uploading...</small>}
+                                                                        </>
                                                                     )}
                                                                 </div>
                                                             )}
@@ -492,47 +583,56 @@ export default function EventDetail() {
                                             )}
 
                                             {/* Team Registration Option */}
-                                            <div style={{ marginTop: event.isTeamEvent ? '0' : '15px', textAlign: event.isTeamEvent ? 'left' : 'center' }}>
-                                                {event.isTeamEvent ? (
-                                                    <h3 style={{ marginTop: '0', marginBottom: '10px' }}>Register as a Team</h3>
-                                                ) : (
-                                                    <button onClick={() => setShowTeamForm(!showTeamForm)}
-                                                        style={{ background: 'none', border: 'none', color: '#337ab7', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
-                                                        {showTeamForm ? 'Cancel team registration' : 'Or register as a team'}
-                                                    </button>
-                                                )}
-                                            </div>
+                                            {myStatus?.inTeam && !alreadyRegistered ? (
+                                                <div style={{ marginTop: '15px', padding: '15px', border: '1px solid #ddd', borderRadius: '8px', background: '#f5f5f5', color: '#666', textAlign: 'center' }}>
+                                                    <p style={{ margin: 0 }}>You are currenty in a team for this event.</p>
+                                                    <Link to="/teams" style={{ display: 'inline-block', marginTop: '8px', color: '#337ab7', fontWeight: 'bold' }}>Manage Team in My Teams</Link>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div style={{ marginTop: event.isTeamEvent ? '0' : '15px', textAlign: event.isTeamEvent ? 'left' : 'center' }}>
+                                                        {event.isTeamEvent ? (
+                                                            <h3 style={{ marginTop: '0', marginBottom: '10px' }}>Register as a Team</h3>
+                                                        ) : (
+                                                            <button onClick={() => setShowTeamForm(!showTeamForm)}
+                                                                style={{ background: 'none', border: 'none', color: '#337ab7', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
+                                                                {showTeamForm ? 'Cancel team registration' : 'Or register as a team'}
+                                                            </button>
+                                                        )}
+                                                    </div>
 
-                                            {(showTeamForm || event.isTeamEvent) && (
-                                                <form onSubmit={handleCreateTeam} style={{ marginTop: '15px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
-                                                    <h4 style={{ marginTop: 0 }}>Create a Team</h4>
-                                                    <div style={{ marginBottom: '10px' }}>
-                                                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Team Name *</label>
-                                                        <input type="text" value={teamName} onChange={e => setTeamName(e.target.value)} required
-                                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                                    </div>
-                                                    <div style={{ marginBottom: '10px' }}>
-                                                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Team Size</label>
-                                                        <select value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value))} style={{ width: '100px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
-                                                            {Array.from({ length: (event.maxTeamSize || 10) - (event.minTeamSize || 2) + 1 }, (_, i) => i + (event.minTeamSize || 2)).map(size => (
-                                                                <option key={size} value={size}>{size} members</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                    <div style={{ marginBottom: '10px' }}>
-                                                        <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Invite Members (comma-separated emails)</label>
-                                                        <textarea value={teamEmails} onChange={e => setTeamEmails(e.target.value)}
-                                                            placeholder="member1@iiit.ac.in, member2@iiit.ac.in"
-                                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', height: '60px' }} />
-                                                    </div>
-                                                    <button type="submit" disabled={isSubmitting}
-                                                        style={{ padding: '10px 20px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>
-                                                        {isSubmitting ? 'Creating...' : 'Create Team & Send Invites'}
-                                                    </button>
-                                                    <p style={{ fontSize: '11px', color: '#888', marginTop: '8px', marginBottom: 0 }}>
-                                                        Team members will receive invites. Registration completes when all accept and you register the team from My Teams.
-                                                    </p>
-                                                </form>
+                                                    {(showTeamForm || event.isTeamEvent) && (
+                                                        <form onSubmit={handleCreateTeam} style={{ marginTop: '15px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px', background: '#f9f9f9' }}>
+                                                            <h4 style={{ marginTop: 0 }}>Create a Team</h4>
+                                                            <div style={{ marginBottom: '10px' }}>
+                                                                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Team Name *</label>
+                                                                <input type="text" value={teamName} onChange={e => setTeamName(e.target.value)} required
+                                                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
+                                                            </div>
+                                                            <div style={{ marginBottom: '10px' }}>
+                                                                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Team Size</label>
+                                                                <select value={teamSize} onChange={e => setTeamSize(parseInt(e.target.value))} style={{ width: '100px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }}>
+                                                                    {Array.from({ length: (event.maxTeamSize || 10) - (event.minTeamSize || 2) + 1 }, (_, i) => i + (event.minTeamSize || 2)).map(size => (
+                                                                        <option key={size} value={size}>{size} members</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                            <div style={{ marginBottom: '10px' }}>
+                                                                <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Invite Members (comma-separated emails)</label>
+                                                                <textarea value={teamEmails} onChange={e => setTeamEmails(e.target.value)}
+                                                                    placeholder="member1@iiit.ac.in, member2@iiit.ac.in"
+                                                                    style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', height: '60px' }} />
+                                                            </div>
+                                                            <button type="submit" disabled={isSubmitting}
+                                                                style={{ padding: '10px 20px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>
+                                                                {isSubmitting ? 'Creating...' : 'Create Team & Send Invites'}
+                                                            </button>
+                                                            <p style={{ fontSize: '11px', color: '#888', marginTop: '8px', marginBottom: 0 }}>
+                                                                Team members will receive invites. Registration completes when all accept and you register the team from My Teams.
+                                                            </p>
+                                                        </form>
+                                                    )}
+                                                </>
                                             )}
                                         </div>
                                     )
@@ -574,7 +674,7 @@ export default function EventDetail() {
                             </button>
                             <button onClick={() => {
                                 if (confirmConfig.action === 'register') executeRegister();
-                                else if (confirmConfig.action === 'purchase') executePurchase(confirmConfig.payload.item, confirmConfig.payload.qty);
+                                else if (confirmConfig.action === 'place_order') executePlaceOrder();
                                 setConfirmConfig(null);
                             }} disabled={isSubmitting}
                                 style={{ padding: '10px 20px', background: '#337ab7', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>

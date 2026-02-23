@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { useDialog } from '../../context/DialogContext';
 
 export default function AdminDashboard() {
     const [organizers, setOrganizers] = useState([]);
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState('organizers');
     const [generatedCreds, setGeneratedCreds] = useState(null);
     const [creating, setCreating] = useState(false);
+    const { showAlert, showPrompt } = useDialog();
 
     useEffect(() => {
         fetchData();
@@ -47,7 +49,7 @@ export default function AdminDashboard() {
                 setGeneratedCreds(res.data.credentials);
             }
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed');
+            showAlert(err.response?.data?.error || 'Failed');
         } finally {
             setCreating(false);
         }
@@ -65,21 +67,21 @@ export default function AdminDashboard() {
             fetchData();
             setConfirmAction(null);
         } catch (e) {
-            alert('Action failed');
+            showAlert('Action failed');
             setConfirmAction(null);
         }
     }
 
     async function handleResetAction(requestId, action) {
         try {
-            const note = prompt(`Add a note for the organizer (optional):`) || '';
+            const note = await showPrompt(`Add a note for the organizer (optional):`) || '';
             const res = await api.post(`/password-reset/${requestId}/${action}`, { note });
             if (action === 'approve' && res.data.tempPassword) {
-                alert(`Request approved. Temporary password: ${res.data.tempPassword}\n\nPlease share this with the organizer securely.`);
+                showAlert(`Request approved. Temporary password: ${res.data.tempPassword}\n\nPlease share this with the organizer securely.`);
             }
             fetchResetRequests();
         } catch (err) {
-            alert(err.response?.data?.error || 'Action failed');
+            showAlert(err.response?.data?.error || 'Action failed');
         }
     }
 
@@ -156,7 +158,7 @@ export default function AdminDashboard() {
                                 <p style={{ margin: '8px 0 0', fontSize: '12px', color: '#666' }}>The organizer can log in immediately with these credentials. Please share them securely.</p>
                                 <button onClick={() => {
                                     navigator.clipboard.writeText(`Email: ${generatedCreds.email}\nPassword: ${generatedCreds.password}`);
-                                    alert('Credentials copied to clipboard!');
+                                    showAlert('Credentials copied to clipboard!');
                                 }} style={{ marginTop: '8px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer' }}>Copy to Clipboard</button>
                                 <button onClick={() => setGeneratedCreds(null)} style={{ marginTop: '8px', marginLeft: '8px', padding: '4px 12px', fontSize: '13px', cursor: 'pointer', background: 'none', border: '1px solid #ccc' }}>Dismiss</button>
                             </div>
@@ -206,56 +208,59 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </>
-            )}
+            )
+            }
 
-            {activeTab === 'resets' && (
-                <>
-                    <h3>Password Reset Requests</h3>
-                    {resetRequests.length === 0 ? (
-                        <p style={{ color: '#888' }}>No password reset requests.</p>
-                    ) : (
-                        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-                            <thead>
-                                <tr style={{ background: '#eee', textAlign: 'left' }}>
-                                    <th style={{ padding: '10px' }}>Club / Organizer</th>
-                                    <th style={{ padding: '10px' }}>Date</th>
-                                    <th style={{ padding: '10px' }}>Reason</th>
-                                    <th style={{ padding: '10px' }}>Status</th>
-                                    <th style={{ padding: '10px' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {resetRequests.map(r => (
-                                    <tr key={r._id} style={{ borderBottom: '1px solid #ddd' }}>
-                                        <td style={{ padding: '10px' }}>{r.organizer?.organizerName || 'Unknown'}</td>
-                                        <td style={{ padding: '10px' }}>{new Date(r.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
-                                        <td style={{ padding: '10px' }}>{r.reason || '-'}</td>
-                                        <td style={{ padding: '10px' }}>
-                                            <span style={{
-                                                padding: '2px 8px', borderRadius: '3px', fontSize: '12px',
-                                                background: r.status === 'approved' ? '#dff0d8' : r.status === 'rejected' ? '#f2dede' : '#fcf8e3',
-                                                color: r.status === 'approved' ? '#3c763d' : r.status === 'rejected' ? '#a94442' : '#8a6d3b'
-                                            }}>
-                                                {r.status}
-                                            </span>
-                                        </td>
-                                        <td style={{ padding: '10px' }}>
-                                            {r.status === 'pending' ? (
-                                                <>
-                                                    <button onClick={() => handleResetAction(r._id, 'approve')} style={{ marginRight: '5px', color: 'green' }}>Approve</button>
-                                                    <button onClick={() => handleResetAction(r._id, 'reject')} style={{ color: 'red' }}>Reject</button>
-                                                </>
-                                            ) : (
-                                                <span style={{ color: '#888', fontSize: '13px' }}>{r.adminNote || 'Processed'}</span>
-                                            )}
-                                        </td>
+            {
+                activeTab === 'resets' && (
+                    <>
+                        <h3>Password Reset Requests</h3>
+                        {resetRequests.length === 0 ? (
+                            <p style={{ color: '#888' }}>No password reset requests.</p>
+                        ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
+                                <thead>
+                                    <tr style={{ background: '#eee', textAlign: 'left' }}>
+                                        <th style={{ padding: '10px' }}>Club / Organizer</th>
+                                        <th style={{ padding: '10px' }}>Date</th>
+                                        <th style={{ padding: '10px' }}>Reason</th>
+                                        <th style={{ padding: '10px' }}>Status</th>
+                                        <th style={{ padding: '10px' }}>Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </>
-            )}
-        </div>
+                                </thead>
+                                <tbody>
+                                    {resetRequests.map(r => (
+                                        <tr key={r._id} style={{ borderBottom: '1px solid #ddd' }}>
+                                            <td style={{ padding: '10px' }}>{r.organizer?.organizerName || 'Unknown'}</td>
+                                            <td style={{ padding: '10px' }}>{new Date(r.createdAt).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+                                            <td style={{ padding: '10px' }}>{r.reason || '-'}</td>
+                                            <td style={{ padding: '10px' }}>
+                                                <span style={{
+                                                    padding: '2px 8px', borderRadius: '3px', fontSize: '12px',
+                                                    background: r.status === 'approved' ? '#dff0d8' : r.status === 'rejected' ? '#f2dede' : '#fcf8e3',
+                                                    color: r.status === 'approved' ? '#3c763d' : r.status === 'rejected' ? '#a94442' : '#8a6d3b'
+                                                }}>
+                                                    {r.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '10px' }}>
+                                                {r.status === 'pending' ? (
+                                                    <>
+                                                        <button onClick={() => handleResetAction(r._id, 'approve')} style={{ marginRight: '5px', color: 'green' }}>Approve</button>
+                                                        <button onClick={() => handleResetAction(r._id, 'reject')} style={{ color: 'red' }}>Reject</button>
+                                                    </>
+                                                ) : (
+                                                    <span style={{ color: '#888', fontSize: '13px' }}>{r.adminNote || 'Processed'}</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </>
+                )
+            }
+        </div >
     );
 }

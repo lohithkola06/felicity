@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../api/axios';
+import { useDialog } from '../../context/DialogContext';
 
 const FIELD_TYPES = [
     { value: 'text', label: 'Text' },
@@ -24,6 +25,7 @@ export default function EditEvent() {
     const [isTeamEvent, setIsTeamEvent] = useState(false);
     const [minTeamSize, setMinTeamSize] = useState(2);
     const [maxTeamSize, setMaxTeamSize] = useState(4);
+    const { showConfirm } = useDialog();
 
     function toLocalDatetimeString(isoStr) {
         if (!isoStr) return '';
@@ -91,7 +93,8 @@ export default function EditEvent() {
 
     // Status change handler
     async function handleStatusChange(newStatus) {
-        if (!window.confirm(`Change status to "${newStatus}"?`)) return;
+        const confirmed = await showConfirm(`Change status to "${newStatus}"?`);
+        if (!confirmed) return;
         setStatusUpdating(true);
         setError('');
         try {

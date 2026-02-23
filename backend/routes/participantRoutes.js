@@ -1,7 +1,9 @@
 const express = require('express');
+const mongoose = require('mongoose');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const User = require('../models/User');
+const Team = require('../models/Team');
 const { auth, authorize } = require('../middleware/auth');
 const { sendWaitlistNotification } = require('../utils/email');
 
@@ -34,12 +36,18 @@ router.get('/dashboard', async (req, res) => {
                 ticketId: r.ticketId,
                 qrCode: r.qrCode,
                 teamName: r.team?.name || null,
+                rejectionComment: r.rejectionComment || null,
             };
 
             // sort into buckets
             if (r.status === 'cancelled') cancelled.push(entry);
             else if (r.status === 'completed') completed.push(entry);
-            else if (r.event.startDate && r.event.startDate > now) upcoming.push(entry);
+            else if (r.status === 'registered') {
+                // If it hasn't ended yet, it's upcoming/active
+                if (!r.event.endDate || new Date(r.event.endDate) > now) {
+                    upcoming.push(entry);
+                }
+            }
 
             // type tabs (skip cancelled ones)
             if (r.status !== 'cancelled') {
@@ -49,7 +57,6 @@ router.get('/dashboard', async (req, res) => {
         }
 
         // fetch pending invites
-        const Team = mongoose.model('Team'); // Need to load Team since it wasn't required at the top
         const pendingTeams = await Team.find({
             'members.user': req.user._id,
             'members.status': 'pending'

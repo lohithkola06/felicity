@@ -2,6 +2,8 @@ const express = require('express');
 const Event = require('../models/Event');
 const Registration = require('../models/Registration');
 const { auth, authorize } = require('../middleware/auth');
+const generateTicket = require('../utils/generateTicket');
+const { sendMerchEmail } = require('../utils/email');
 
 const router = express.Router();
 router.use(auth, authorize('organizer'));
@@ -183,6 +185,99 @@ router.put('/profile', async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(500).json({ error: 'failed to update profile' });
+    }
+});
+
+// -------------------------------------------------------------------------
+// PATCH /api/organizer/events/:id/registrations/:regId/approve
+// -------------------------------------------------------------------------
+// Approve a pending merch order. Generate ticket and send email.
+router.patch('/events/:id/registrations/:regId/approve', async (req, res) => {
+    try {
+        const event = await Event.findOne({ _id: req.params.id, organizer: req.user._id });
+        if (!event) return res.status(404).json({ error: 'Event not found' });
+
+        let registration = await Registration.findOne({ _id: req.params.regId, event: event._id });
+        if (!registration) return res.status(404).json({ error: 'Registration not found' });
+
+        if (registration.status !== 'pending_approval') {
+            return res.status(400).json({ error: `Cannot approve order. Current status is ${registration.status}` });
+        }
+
+        // Generate Ticket (QR Code)
+        // We need the user's email, so let's populate it
+        await registration.populate('participant', 'email name firstName');
+        const userEmail = registration.participant?.email;
+
+        if (!userEmail) {
+            return res.status(400).json({ error: 'Participant email not found' });
+        }
+
+        const { ticketId, qrCode } = await generateTicket(event.name, userEmail);
+
+        registration.status = 'approved';
+        registration.ticketId = ticketId;
+        registration.qrCode = qrCode;
+        await registration.save();
+
+        // Send Email Confirmation (Async)
+        const itemsList = registration.merchandiseSelections || [];
+        sendMerchEmail(userEmail, event.name, ticketId, itemsList, qrCode).catch(err => console.error("Merch Email Failed:", err));
+
+        res.json(registration);
+    } catch (err) {
+        console.error('Approval Error:', err);
+        res.status(500).json({ error: 'Failed to approve order' });
+    }
+});
+
+// -------------------------------------------------------------------------
+// PATCH /api/organizer/events/:id/registrations/:regId/reject
+// -------------------------------------------------------------------------
+// Reject a pending merch order. Restore stock.
+router.patch('/events/:id/registrations/:regId/reject', async (req, res) => {
+    try {
+        const event = await Event.findOne({ _id: req.params.id, organizer: req.user._id });
+        if (!event) return res.status(404).json({ error: 'Event not found' });
+
+        const registration = await Registration.findOne({ _id: req.params.regId, event: event._id });
+        if (!registration) return res.status(404).json({ error: 'Registration not found' });
+
+        if (registration.status !== 'pending_approval') {
+            return res.status(400).json({ error: `Cannot reject order. Current status is ${registration.status}` });
+        }
+
+        const { comment } = req.body;
+
+        registration.status = 'rejected';
+        registration.rejectionComment = comment || 'No reason provided.';
+        await registration.save();
+
+        // Restore Stock
+        if (registration.merchandiseSelections && Array.isArray(registration.merchandiseSelections)) {
+            let eventUpdated = false;
+            for (const sel of registration.merchandiseSelections) {
+                const itemIndex = event.items.findIndex(i =>
+                    i.name === sel.itemName &&
+                    i.size === sel.size &&
+                    i.color === sel.color &&
+                    i.variant === sel.variant
+                );
+                if (itemIndex > -1) {
+                    event.items[itemIndex].stock += (sel.quantity || 1);
+                    eventUpdated = true;
+                }
+            }
+            if (eventUpdated) {
+                event.registrationCount = Math.max(0, event.registrationCount - 1);
+                await event.save();
+            }
+        }
+
+        res.json(registration);
+    } catch (err) {
+        console.error('Rejection Error:', err);
+        res.status(500).json({ error: 'Failed to reject order' });
     }
 });
 

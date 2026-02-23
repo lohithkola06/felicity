@@ -46,6 +46,11 @@ export default function CreateEvent() {
     const [merchItems, setMerchItems] = useState([]);
     const [customForm, setCustomForm] = useState([]);
 
+    // Team Event State
+    const [isTeamEvent, setIsTeamEvent] = useState(false);
+    const [minTeamSize, setMinTeamSize] = useState(2);
+    const [maxTeamSize, setMaxTeamSize] = useState(4);
+
     function addFormField() {
         setCustomForm([...customForm, { label: '', fieldType: 'text', required: false, options: [] }]);
     }

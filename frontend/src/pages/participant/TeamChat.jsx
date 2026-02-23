@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { useDialog } from '../../context/DialogContext';
 
 export default function TeamChat() {
     const { teamId } = useParams();
@@ -13,6 +14,7 @@ export default function TeamChat() {
     const [typing, setTyping] = useState(false);
     const scrollRef = useRef();
     const pollRef = useRef();
+    const { showAlert } = useDialog();
 
     useEffect(() => {
         api.get(`/teams/${teamId}`).then(res => setTeam(res.data)).catch(() => { });
@@ -46,7 +48,7 @@ export default function TeamChat() {
             setInput('');
             loadMessages();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to send message');
+            showAlert(err.response?.data?.error || 'Failed to send message');
         }
         setSending(false);
     }

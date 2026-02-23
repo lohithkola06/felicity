@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { useDialog } from '../../context/DialogContext';
 
 export default function OrganizerDashboard() {
     const [events, setEvents] = useState([]);
@@ -9,6 +10,7 @@ export default function OrganizerDashboard() {
     const [deleting, setDeleting] = useState(null);
     const carouselRef = useRef(null);
     const navigate = useNavigate();
+    const { showConfirm, showAlert } = useDialog();
 
     useEffect(() => {
         fetchData();
@@ -29,13 +31,14 @@ export default function OrganizerDashboard() {
     };
 
     const handleDelete = async (eventId, eventName) => {
-        if (!window.confirm(`Are you sure you want to delete "${eventName}"? This will remove all registrations, teams, and feedback. This action cannot be undone.`)) return;
+        const confirmed = await showConfirm(`Are you sure you want to delete "${eventName}"? This will remove all registrations, teams, and feedback. This action cannot be undone.`);
+        if (!confirmed) return;
         setDeleting(eventId);
         try {
             await api.delete(`/events/${eventId}`);
             fetchData();
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to delete event');
+            showAlert(err.response?.data?.error || 'Failed to delete event');
         } finally {
             setDeleting(null);
         }

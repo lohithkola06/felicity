@@ -21,6 +21,7 @@ const storage = new CloudinaryStorage({
     params: {
         folder: 'felicity_events', // Folder name in Cloudinary
         allowed_formats: ['jpg', 'png', 'jpeg', 'pdf', 'doc', 'docx'], // Allow images and common document types
+        resource_type: 'auto', // Important: Treat PDFs appropriately instead of raw
     },
 });
 

@@ -237,7 +237,8 @@ router.get('/:id/participants', auth, authorize('organizer'), async (req, res) =
         if (!event) return res.status(404).json({ error: 'Event not found.' });
 
         const registrations = await Registration.find({ event: req.params.id })
-            .populate('participant', 'firstName lastName email contactNumber collegeName');
+            .populate('participant', 'firstName lastName email contactNumber collegeName')
+            .populate('team', 'name');
 
         res.json(registrations);
     } catch (err) {
@@ -420,8 +421,25 @@ router.get('/:id', async (req, res) => {
 router.get('/:id/my-status', auth, async (req, res) => {
     try {
         const registration = await Registration.findOne({ event: req.params.id, participant: req.user._id });
-        if (!registration || registration.status === 'cancelled') return res.json({ registered: false });
-        res.json({ registered: true, ...registration.toJSON() });
+
+        // Also check if they are in a team (forming, ready, or registered)
+        const Team = require('../models/Team');
+        const team = await Team.findOne({
+            event: req.params.id,
+            $or: [
+                { leader: req.user._id },
+                { 'members.user': req.user._id, 'members.status': 'accepted' }
+            ]
+        });
+
+        const statusResponse = {
+            registered: !!(registration && registration.status !== 'cancelled'),
+            inTeam: !!team,
+            teamId: team ? team._id : null,
+            ...(registration ? registration.toJSON() : {})
+        };
+
+        res.json(statusResponse);
     } catch (err) {
         console.error('Fetch My Status Error:', err);
         res.status(500).json({ error: 'Could not fetch status' });
@@ -515,7 +533,7 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
 // -------------------------------------------------------------------------
 // POST /api/events/:id/purchase
 // -------------------------------------------------------------------------
-// Purchase merchandise items.
+// Purchase merchandise items (cart checkout).
 router.post('/:id/purchase', auth, authorize('participant'), async (req, res) => {
     try {
         const event = await Event.findById(req.params.id);
@@ -526,46 +544,94 @@ router.post('/:id/purchase', auth, authorize('participant'), async (req, res) =>
         if (event.status !== 'published' && event.status !== 'ongoing')
             return res.status(400).json({ error: 'Sales are currently closed.' });
 
-        const { itemName, size, color, variant, quantity } = req.body;
-        if (!itemName) return res.status(400).json({ error: 'Please specify which item you want to buy.' });
+        const cartItems = req.body.items; // Expecting an array of { item, quantity }
+        if (!cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
+            return res.status(400).json({ error: 'Your cart is empty.' });
+        }
 
-        // Find the specific item variant in the event's inventory
-        const desiredItem = event.items.find(i =>
-            i.name === itemName &&
-            (!size || i.size === size) &&
-            (!color || i.color === color) &&
-            (!variant || i.variant === variant)
-        );
+        // 1. Calculate total quantity being purchased in this transaction
+        const totalQuantityInCart = cartItems.reduce((sum, cartItem) => sum + (cartItem.quantity || 1), 0);
 
-        if (!desiredItem) return res.status(404).json({ error: 'We could not find that specific item configuration.' });
+        // 2. User purchase limit check (across all past orders + this cart)
+        const pastRegistrations = await Registration.find({ event: event._id, participant: req.user._id, status: { $nin: ['cancelled', 'rejected'] } });
 
-        const qtyToBuy = quantity || 1;
-        if (desiredItem.stock < qtyToBuy) return res.status(400).json({ error: `Sorry, we only have ${desiredItem.stock} left in stock.` });
+        let pastPurchasedQuantity = 0;
+        for (const reg of pastRegistrations) {
+            if (reg.merchandiseSelections && Array.isArray(reg.merchandiseSelections)) {
+                pastPurchasedQuantity += reg.merchandiseSelections.reduce((sum, item) => sum + (item.quantity || 1), 0);
+            } else if (reg.merchandiseSelections) {
+                // Handle legacy data structure if it exists
+                pastPurchasedQuantity += (reg.merchandiseSelections.quantity || 1);
+            }
+        }
 
-        // User purchase limit check
-        const userPurchases = await Registration.countDocuments({ event: event._id, participant: req.user._id });
-        if (userPurchases + qtyToBuy > event.purchaseLimitPerUser)
-            return res.status(400).json({ error: `You have reached the purchase limit of ${event.purchaseLimitPerUser} items for this event.` });
+        if (pastPurchasedQuantity + totalQuantityInCart > event.purchaseLimitPerUser) {
+            return res.status(400).json({
+                error: `You have reached the purchase limit of ${event.purchaseLimitPerUser} items for this event. You are trying to buy ${totalQuantityInCart} now, and have bought ${pastPurchasedQuantity} previously.`
+            });
+        }
 
-        const { ticketId, qrCode } = await generateTicket(event.name, req.user.email);
+        // 3. Validate stock for every item before deducting
+        const updatesToApply = [];
+        const selectionsToSave = [];
+
+        for (const cartItem of cartItems) {
+            const { item, quantity } = cartItem;
+            const qtyToBuy = quantity || 1;
+
+            if (!item || !item.name) {
+                return res.status(400).json({ error: 'Invalid item in cart.' });
+            }
+
+            // Find the specific item variant in the event's inventory matching exactly
+            const desiredItemIndex = event.items.findIndex(i =>
+                i.name === item.name &&
+                i.size === item.size &&
+                i.color === item.color &&
+                i.variant === item.variant
+            );
+
+            if (desiredItemIndex === -1) {
+                return res.status(404).json({ error: `We could not find the item configuration for ${item.name}.` });
+            }
+
+            const desiredItem = event.items[desiredItemIndex];
+
+            if (desiredItem.stock < qtyToBuy) {
+                return res.status(400).json({ error: `Sorry, we only have ${desiredItem.stock} left in stock for ${desiredItem.name} ${desiredItem.size || ''}.` });
+            }
+
+            // Queue the stock deduction
+            updatesToApply.push({ index: desiredItemIndex, qty: qtyToBuy });
+
+            // Queue the selection for the registration doc
+            selectionsToSave.push({
+                itemName: desiredItem.name,
+                size: desiredItem.size,
+                color: desiredItem.color,
+                variant: desiredItem.variant,
+                quantity: qtyToBuy
+            });
+        }
+
+        // 4. All checks passed, apply stock deductions
+        for (const update of updatesToApply) {
+            event.items[update.index].stock -= update.qty;
+        }
 
         const registration = await Registration.create({
             event: event._id,
             participant: req.user._id,
-            merchandiseSelections: { itemName, size, color, variant, quantity: qtyToBuy },
-            ticketId,
-            qrCode,
-            paymentStatus: 'pending', // Assume payment gateway integration here
+            merchandiseSelections: selectionsToSave,
+            status: 'pending_approval',
+            paymentStatus: 'pending', // Payment gateway later
+            // Note: No ticket/QR generated yet. Handled on approval.
         });
 
-        // Deduct Stock
-        desiredItem.stock -= qtyToBuy;
         event.registrationCount += 1; // Count transactions
         await event.save();
 
-        sendMerchEmail(req.user.email, event.name, ticketId, itemName, qrCode).catch(err => console.error("Merch Email Failed:", err));
-
-        res.status(201).json({ registration, ticketId });
+        res.status(201).json({ registration });
     } catch (err) {
         console.error('Purchase Error:', err);
         res.status(500).json({ error: 'Purchase failed. Please try again.' });

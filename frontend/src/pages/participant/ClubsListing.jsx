@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import { useDialog } from '../../context/DialogContext';
 
 export default function ClubsListing() {
     const { user } = useAuth();
@@ -9,6 +10,7 @@ export default function ClubsListing() {
     const [loading, setLoading] = useState(true);
     const [followedIds, setFollowedIds] = useState(new Set());
     const [actionLoading, setActionLoading] = useState(null);
+    const { showAlert } = useDialog();
 
     useEffect(() => {
         loadClubs();
@@ -40,7 +42,7 @@ export default function ClubsListing() {
             await api.post(`/participant/clubs/${clubId}/follow`);
             setFollowedIds(prev => new Set([...prev, clubId]));
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to follow');
+            showAlert(err.response?.data?.error || 'Failed to follow');
         }
         setActionLoading(null);
     }
@@ -55,7 +57,7 @@ export default function ClubsListing() {
                 return next;
             });
         } catch (err) {
-            alert(err.response?.data?.error || 'Failed to unfollow');
+            showAlert(err.response?.data?.error || 'Failed to unfollow');
         }
         setActionLoading(null);
     }

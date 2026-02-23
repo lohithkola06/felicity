@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
+import { useDialog } from '../../context/DialogContext';
 
 export default function ParticipantDashboard() {
+    const { showAlert } = useDialog();
+    const navigate = useNavigate();
     const [data, setData] = useState({ upcoming: [], history: { normal: [], merchandise: [], completed: [], cancelled: [] }, invites: [] });
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('upcoming');
@@ -26,20 +30,22 @@ export default function ParticipantDashboard() {
     };
 
     async function handleInviteResponse(teamId, action) {
-        setInviteActionConfig({ teamId, action });
-    }
+        if (action === 'accept') {
+            // Redirect to My Teams where the form modal exists
+            navigate('/participant/teams');
+            return;
+        }
 
-    async function executeInviteResponse() {
-        if (!inviteActionConfig) return;
         try {
-            await api.post(`/teams/${inviteActionConfig.teamId}/${inviteActionConfig.action}`);
+            await api.post(`/ teams / ${teamId}/respond`, { action });
+            showAlert('Invite declined.');
             fetchDashboard();
         } catch (err) {
-            alert(err.response?.data?.error || 'Action failed');
-        } finally {
-            setInviteActionConfig(null);
+            showAlert(err.response?.data?.error || 'could not decline invite');
         }
     }
+
+    // The executeInviteResponse function is no longer needed as handleInviteResponse now performs the action directly.
 
     function promptCancel(regId) {
         setConfirmCancel(regId);
@@ -51,7 +57,7 @@ export default function ParticipantDashboard() {
             await api.post(`/participant/registrations/${confirmCancel}/cancel`);
             fetchDashboard();
         } catch (err) {
-            alert(err.response?.data?.error || 'Cancellation failed');
+            showAlert(err.response?.data?.error || 'Cancellation failed');
         } finally {
             setConfirmCancel(null);
         }
@@ -170,11 +176,16 @@ export default function ParticipantDashboard() {
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                     <span style={{
                                         padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
-                                        background: entry.status === 'cancelled' ? '#f2dede' : entry.status === 'completed' ? '#dff0d8' : '#fcf8e3',
-                                        color: entry.status === 'cancelled' ? '#a94442' : entry.status === 'completed' ? '#3c763d' : '#8a6d3b',
+                                        background: entry.status === 'cancelled' ? '#f2dede' : entry.status === 'completed' ? '#dff0d8' : entry.status === 'rejected' ? '#f2dede' : entry.status === 'pending_approval' ? '#fcf8e3' : '#fcf8e3',
+                                        color: entry.status === 'cancelled' ? '#a94442' : entry.status === 'completed' ? '#3c763d' : entry.status === 'rejected' ? '#a94442' : entry.status === 'pending_approval' ? '#8a6d3b' : '#8a6d3b',
                                     }}>
-                                        {entry.status}
+                                        {entry.status === 'pending_approval' || entry.status === 'approved' || entry.status === 'rejected' ? entry.status.replace('_', ' ') : entry.status}
                                     </span>
+                                    {entry.status === 'rejected' && entry.rejectionComment && (
+                                        <div style={{ marginTop: '5px', fontSize: '11px', color: '#a94442', maxWidth: '150px' }}>
+                                            Reason: {entry.rejectionComment}
+                                        </div>
+                                    )}
                                 </td>
                                 <td style={{ padding: '10px', border: '1px solid #ddd' }}>
                                     {entry.ticketId && (
