@@ -206,7 +206,6 @@ Events follow a lifecycle: `draft` → `published` → `ongoing` → `completed`
 git clone <repository-url>
 cd assignment-1
 ```
-<!-- deploy-trigger -->
 
 ### 2. Backend Setup
 ```bash
