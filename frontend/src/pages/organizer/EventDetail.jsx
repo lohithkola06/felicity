@@ -530,6 +530,33 @@ export default function OrgEventDetail() {
                         </td>
                     </tr>
                 )}
+
+                {/* Normal Event Payment Approval Row */}
+                {event.type === 'normal' && event.registrationFee > 0 && r.paymentProof && (
+                    <tr>
+                        <td colSpan={colCount} style={{ padding: '12px 20px', background: '#e6f2ff', border: '1px solid #cce5ff' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div>
+                                    <strong style={{ fontSize: '12px', color: '#004085', display: 'block', marginBottom: '8px' }}>Payment Verification (Rs. {event.registrationFee})</strong>
+                                    <button type="button" onClick={() => openFile(r.paymentProof)} style={{ background: 'none', border: 'none', color: '#337ab7', fontWeight: 'bold', fontSize: '13px', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+                                        View Uploaded Payment Proof
+                                    </button>
+                                </div>
+                                {r.status === 'pending_approval' && (
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => handleApproveOrder(r._id)} style={{ padding: '6px 12px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Approve Payment</button>
+                                        <button onClick={() => setRejectRegId(r._id)} style={{ padding: '6px 12px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}>Reject Payment</button>
+                                    </div>
+                                )}
+                                {r.status === 'rejected' && r.rejectionComment && (
+                                    <div style={{ color: '#a94442', fontSize: '12px', maxWidth: '300px' }}>
+                                        <strong>Rejected:</strong> {r.rejectionComment}
+                                    </div>
+                                )}
+                            </div>
+                        </td>
+                    </tr>
+                )}
             </React.Fragment>
         );
     }

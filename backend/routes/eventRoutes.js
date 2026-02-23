@@ -491,16 +491,31 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
             }
         }
 
-        // Generate Ticket (QR Code)
-        const { ticketId, qrCode } = await generateTicket(event.name, req.user.email);
+        // Generate Ticket (QR Code) ONLY if fee is 0
+        let ticketId = null;
+        let qrCode = null;
+        let registrationStatus = 'registered';
+
+        if (event.registrationFee > 0) {
+            // For paid events, they must upload proof and await approval
+            const { paymentProof } = req.body;
+            if (!paymentProof) return res.status(400).json({ error: 'Payment proof is required for paid events.' });
+            registrationStatus = 'pending_approval';
+        } else {
+            // Free event, generate ticket now
+            const ticketData = await generateTicket(event.name, req.user.email);
+            ticketId = ticketData.ticketId;
+            qrCode = ticketData.qrCode;
+        }
 
         if (registration) {
             // Repurpose the cancelled registration to avoid unique index collision
-            registration.status = 'registered';
+            registration.status = registrationStatus;
             registration.formResponses = req.body.formResponses || {};
-            registration.ticketId = ticketId;
-            registration.qrCode = qrCode;
+            if (ticketId) registration.ticketId = ticketId;
+            if (qrCode) registration.qrCode = qrCode;
             registration.paymentStatus = event.registrationFee > 0 ? 'pending' : 'paid';
+            if (req.body.paymentProof) registration.paymentProof = req.body.paymentProof;
             registration.registeredAt = Date.now();
             await registration.save();
         } else {
@@ -511,6 +526,8 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
                 ticketId,
                 qrCode,
                 paymentStatus: event.registrationFee > 0 ? 'pending' : 'paid',
+                paymentProof: req.body.paymentProof,
+                status: registrationStatus
             });
         }
 
@@ -519,8 +536,10 @@ router.post('/:id/register', auth, authorize('participant'), async (req, res) =>
         if (!event.formLocked) event.formLocked = true; // Lock schema once data exists
         await event.save();
 
-        // Send Email Confirmation (Async)
-        sendTicketEmail(req.user.email, event.name, ticketId, qrCode).catch(err => console.error("Email Failed:", err));
+        // Send Email Confirmation (Async) ONLY if fee is 0
+        if (event.registrationFee === 0) {
+            sendTicketEmail(req.user.email, event.name, ticketId, qrCode).catch(err => console.error("Email Failed:", err));
+        }
 
         res.status(201).json({ registration, ticketId });
     } catch (err) {

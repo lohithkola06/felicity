@@ -20,6 +20,7 @@ export default function EventDetail() {
     const [cartItems, setCartItems] = useState([]); // [{ item, quantity }]
     const [formResponses, setFormResponses] = useState({});
     const [uploadingFields, setUploadingFields] = useState({});
+    const [paymentUploadedPath, setPaymentUploadedPath] = useState('');
     const [showTeamForm, setShowTeamForm] = useState(false);
     const [teamName, setTeamName] = useState('');
     const [teamEmails, setTeamEmails] = useState('');
@@ -71,6 +72,11 @@ export default function EventDetail() {
                 }
             }
         }
+        if (event.registrationFee > 0 && !paymentUploadedPath) {
+            setStatusMessage({ type: 'error', text: 'Payment proof is required for paid events.' });
+            return;
+        }
+
         setConfirmConfig({ action: 'register', message: 'Are you sure you want to register for this event?', payload: null });
     }
 
@@ -78,8 +84,12 @@ export default function EventDetail() {
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
-            await api.post(`/events/${id}/register`, { formResponses });
-            setStatusMessage({ type: 'success', text: 'You have been successfully registered! A ticket has been sent to your email and is available in your Dashboard.' });
+            await api.post(`/events/${id}/register`, { formResponses, paymentProof: paymentUploadedPath });
+            if (event.registrationFee > 0) {
+                setStatusMessage({ type: 'success', text: 'You have been successfully registered! Your payment requires approval. A ticket will drop once approved.' });
+            } else {
+                setStatusMessage({ type: 'success', text: 'You have been successfully registered! A ticket has been sent to your email and is available in your Dashboard.' });
+            }
             loadEventDetails();
             loadMyStatus();
         } catch (err) {
@@ -186,6 +196,10 @@ export default function EventDetail() {
             return showAlert(`For a team size of ${teamSize}, you must invite exactly ${expectedInvites} members. You have provided ${memberEmails.length} emails.`);
         }
 
+        if (event.registrationFee > 0 && !paymentUploadedPath) {
+            return showAlert('Payment proof is required for paid team events.');
+        }
+
         setIsSubmitting(true);
         setStatusMessage(null);
         try {
@@ -194,10 +208,13 @@ export default function EventDetail() {
                 memberEmails,
                 maxSize: teamSize,
                 formResponses,
+                paymentProof: paymentUploadedPath
             });
             setStatusMessage({ type: 'success', text: 'Team created! Invites sent to members. Go to My Teams to manage.' });
             setShowTeamForm(false);
             setTeamName('');
+            setTeamEmails('');
+            setPaymentUploadedPath('');
             setTeamEmails('');
         } catch (err) {
             setStatusMessage({ type: 'error', text: err.response?.data?.error || 'Failed to create team.' });
@@ -570,6 +587,62 @@ export default function EventDetail() {
                                                 </div>
                                             )}
 
+                                            {/* Payment Proof Section for Paid Events */}
+                                            {event.registrationFee > 0 && (
+                                                <div style={{ marginBottom: '20px', padding: '20px', border: '1px solid #cce5ff', borderRadius: '4px', background: '#e6f2ff' }}>
+                                                    <h3 style={{ marginTop: 0, color: '#004085' }}>Registration Fee: Rs. {event.registrationFee}</h3>
+                                                    <p style={{ fontSize: '14px', color: '#004085', marginBottom: '15px' }}>
+                                                        Please complete your payment and upload a screenshot or receipt of the transaction to secure your spot.
+                                                    </p>
+                                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '14px', color: '#004085' }}>
+                                                        Upload Payment Proof <span style={{ color: '#d9534f' }}>*</span>
+                                                    </label>
+
+                                                    {paymentUploadedPath ? (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#fff', padding: '12px', borderRadius: '4px', border: '1px solid #b8daff' }}>
+                                                            <button type="button" onClick={() => openFile(paymentUploadedPath)} style={{ background: 'none', border: 'none', color: '#337ab7', fontWeight: 'bold', fontSize: '13px', textDecoration: 'underline', cursor: 'pointer', padding: 0 }}>
+                                                                View Uploaded Payment Proof
+                                                            </button>
+                                                            <button type="button" onClick={() => setPaymentUploadedPath('')}
+                                                                style={{ padding: '4px 8px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>
+                                                                Remove
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <input type="file"
+                                                                accept="image/*,application/pdf"
+                                                                disabled={uploadingFields['paymentProof'] || isSubmitting}
+                                                                onChange={async (e) => {
+                                                                    const file = e.target.files[0];
+                                                                    if (!file) return;
+
+                                                                    setUploadingFields(prev => ({ ...prev, paymentProof: true }));
+                                                                    try {
+                                                                        const formData = new FormData();
+                                                                        formData.append('file', file);
+                                                                        const token = localStorage.getItem('token');
+                                                                        const uploadRes = await api.post('/upload', formData, {
+                                                                            headers: {
+                                                                                'Content-Type': 'multipart/form-data',
+                                                                                'Authorization': token ? `Bearer ${token}` : ''
+                                                                            }
+                                                                        });
+                                                                        setPaymentUploadedPath(uploadRes.data.url || uploadRes.data);
+                                                                    } catch (err) {
+                                                                        setStatusMessage({ type: 'error', text: 'Failed to upload payment proof. Please try again.' });
+                                                                        e.target.value = null; // Clear input
+                                                                    } finally {
+                                                                        setUploadingFields(prev => ({ ...prev, paymentProof: false }));
+                                                                    }
+                                                                }}
+                                                                style={{ padding: '8px', width: '100%', border: '1px solid #ccc', borderRadius: '4px', background: '#fff' }} />
+                                                            {uploadingFields['paymentProof'] && <small style={{ color: '#eb9b34', display: 'block', marginTop: '6px', fontWeight: 'bold' }}>Uploading payment proof...</small>}
+                                                        </>
+                                                    )}
+                                                </div>
+                                            )}
+
                                             {/* Standard Registration (hidden for Team Events) */}
                                             {!event.isTeamEvent && (
                                                 <button onClick={promptRegister} disabled={isSubmitting || Object.values(uploadingFields).some(v => v)}
@@ -578,7 +651,7 @@ export default function EventDetail() {
                                                         background: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? '#999' : '#337ab7', color: 'white', border: 'none',
                                                         borderRadius: '4px', cursor: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? 'not-allowed' : 'pointer', width: '100%',
                                                     }}>
-                                                    {isSubmitting ? 'Registering...' : Object.values(uploadingFields).some(v => v) ? 'Waiting for uploads...' : event.registrationFee > 0 ? 'Register & Pay Fee' : 'Register Now'}
+                                                    {isSubmitting ? 'Registering...' : Object.values(uploadingFields).some(v => v) ? 'Waiting for uploads...' : event.registrationFee > 0 ? 'Submit Proof & Register' : 'Register Now'}
                                                 </button>
                                             )}
 
@@ -623,9 +696,33 @@ export default function EventDetail() {
                                                                     placeholder="member1@iiit.ac.in, member2@iiit.ac.in"
                                                                     style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', height: '60px' }} />
                                                             </div>
-                                                            <button type="submit" disabled={isSubmitting}
-                                                                style={{ padding: '10px 20px', background: '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '100%' }}>
-                                                                {isSubmitting ? 'Creating...' : 'Create Team & Send Invites'}
+                                                            {/* Payment info text for team registration happens inside My Teams later, or handled individually by leader. For now, we will wait before adding payment file logic inside team creation as we need to figure out when they pay, usually leaders pay. But standard event registration is higher priority. Assumed handled: If it's a paid team event, leader uploads it here. */}
+                                                            {event.registrationFee > 0 && (
+                                                                <div style={{ marginBottom: '15px' }}>
+                                                                    <label style={{ display: 'block', marginBottom: '4px', fontWeight: 'bold', fontSize: '13px' }}>Upload Payment Proof (Rs. {event.registrationFee}) *</label>
+                                                                    {paymentUploadedPath ? (
+                                                                        <div style={{ padding: '8px', border: '1px solid #ccc', borderRadius: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                                                                            <span>Proof Uploaded ✓</span>
+                                                                            <button type="button" onClick={() => setPaymentUploadedPath('')} style={{ color: 'red', background: 'none', border: 'none', cursor: 'pointer' }}>X</button>
+                                                                        </div>
+                                                                    ) : (
+                                                                        <input type="file" required onChange={async (e) => {
+                                                                            const file = e.target.files[0];
+                                                                            if (!file) return;
+                                                                            setUploadingFields(prev => ({ ...prev, paymentProof: true }));
+                                                                            const formData = new FormData(); formData.append('file', file);
+                                                                            try {
+                                                                                const res = await api.post('/upload', formData, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } });
+                                                                                setPaymentUploadedPath(res.data.url || res.data);
+                                                                            } catch (e) { showAlert('Failed to upload proof!'); e.target.value = null; }
+                                                                            finally { setUploadingFields(prev => ({ ...prev, paymentProof: false })); }
+                                                                        }} style={{ width: '100%', border: '1px solid #ccc', borderRadius: '4px', padding: '6px' }} />
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            <button type="submit" disabled={isSubmitting || Object.values(uploadingFields).some(v => v)}
+                                                                style={{ padding: '10px 20px', background: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? '#aaa' : '#5cb85c', color: '#fff', border: 'none', borderRadius: '4px', cursor: (isSubmitting || Object.values(uploadingFields).some(v => v)) ? 'not-allowed' : 'pointer', width: '100%' }}>
+                                                                {isSubmitting ? 'Creating...' : Object.values(uploadingFields).some(v => v) ? 'Uploading...' : 'Create Team & Send Invites'}
                                                             </button>
                                                             <p style={{ fontSize: '11px', color: '#888', marginTop: '8px', marginBottom: 0 }}>
                                                                 Team members will receive invites. Registration completes when all accept and you register the team from My Teams.

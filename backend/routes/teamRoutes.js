@@ -56,6 +56,7 @@ router.post('/:eventId/create', auth, authorize('participant'), async (req, res)
             members,
             maxSize: maxSize || 4, // Fallback, though we should use event limits if available
             formResponses: formResponses || {},
+            paymentProof: req.body.paymentProof || '',
         });
         await team.save();
 

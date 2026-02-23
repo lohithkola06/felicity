@@ -211,18 +211,35 @@ router.post('/registrations/:id/cancel', async (req, res) => {
         if (!reg) return res.status(404).json({ error: 'registration not found' });
         if (reg.status === 'cancelled') return res.status(400).json({ error: 'already cancelled' });
 
-        // Merchandise orders cannot be cancelled once placed
+        // Check if merchandise and restrict based on status
         const event = await Event.findById(reg.event);
         if (event && event.type === 'merchandise') {
-            return res.status(400).json({ error: 'Merchandise orders cannot be cancelled once placed.' });
-        }
+            if (reg.status !== 'pending_approval') {
+                return res.status(400).json({ error: 'Merchandise orders cannot be cancelled once approved or already rejected.' });
+            }
 
-        // mark cancelled
-        reg.status = 'cancelled';
-        await reg.save();
-
-        // decrement event count
-        if (event) {
+            // Restore stock for merch items
+            if (reg.merchandiseSelections && Array.isArray(reg.merchandiseSelections)) {
+                let eventUpdated = false;
+                for (const sel of reg.merchandiseSelections) {
+                    const itemIndex = event.items.findIndex(i =>
+                        i.name === sel.itemName &&
+                        i.size === sel.size &&
+                        i.color === sel.color &&
+                        i.variant === sel.variant
+                    );
+                    if (itemIndex > -1) {
+                        event.items[itemIndex].stock += (sel.quantity || 1);
+                        eventUpdated = true;
+                    }
+                }
+                if (eventUpdated) {
+                    event.registrationCount = Math.max(0, event.registrationCount - 1);
+                    await event.save();
+                }
+            }
+        } else if (event) {
+            // Normal event logic
             event.registrationCount = Math.max(0, event.registrationCount - 1);
 
             // check waitlist
@@ -236,6 +253,10 @@ router.post('/registrations/:id/cancel', async (req, res) => {
             }
             await event.save();
         }
+
+        // mark cancelled
+        reg.status = 'cancelled';
+        await reg.save();
 
         res.json({ message: 'registration cancelled' });
     } catch (err) {

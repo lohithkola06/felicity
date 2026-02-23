@@ -215,14 +215,25 @@ router.patch('/events/:id/registrations/:regId/approve', async (req, res) => {
 
         const { ticketId, qrCode } = await generateTicket(event.name, userEmail);
 
-        registration.status = 'approved';
+        if (event.type === 'normal') {
+            registration.status = 'registered';
+            registration.paymentStatus = 'paid';
+        } else {
+            registration.status = 'approved';
+        }
+
         registration.ticketId = ticketId;
         registration.qrCode = qrCode;
         await registration.save();
 
         // Send Email Confirmation (Async)
-        const itemsList = registration.merchandiseSelections || [];
-        sendMerchEmail(userEmail, event.name, ticketId, itemsList, qrCode).catch(err => console.error("Merch Email Failed:", err));
+        if (event.type === 'normal') {
+            const { sendTicketEmail } = require('../utils/email');
+            sendTicketEmail(userEmail, event.name, ticketId, qrCode).catch(err => console.error("Ticket Email Failed:", err));
+        } else {
+            const itemsList = registration.merchandiseSelections || [];
+            sendMerchEmail(userEmail, event.name, ticketId, itemsList, qrCode).catch(err => console.error("Merch Email Failed:", err));
+        }
 
         res.json(registration);
     } catch (err) {
@@ -253,24 +264,42 @@ router.patch('/events/:id/registrations/:regId/reject', async (req, res) => {
         registration.rejectionComment = comment || 'No reason provided.';
         await registration.save();
 
-        // Restore Stock
-        if (registration.merchandiseSelections && Array.isArray(registration.merchandiseSelections)) {
-            let eventUpdated = false;
-            for (const sel of registration.merchandiseSelections) {
-                const itemIndex = event.items.findIndex(i =>
-                    i.name === sel.itemName &&
-                    i.size === sel.size &&
-                    i.color === sel.color &&
-                    i.variant === sel.variant
-                );
-                if (itemIndex > -1) {
-                    event.items[itemIndex].stock += (sel.quantity || 1);
-                    eventUpdated = true;
+        if (event.type === 'normal') {
+            // Normal event logic
+            event.registrationCount = Math.max(0, event.registrationCount - 1);
+
+            // check waitlist
+            if (event.waitlist && event.waitlist.length > 0) {
+                // notify first person
+                const nextUser = event.waitlist.shift();
+                const User = require('../models/User');
+                const userToNotify = await User.findById(nextUser.user);
+                if (userToNotify) {
+                    const { sendWaitlistNotification } = require('../utils/email');
+                    sendWaitlistNotification(userToNotify.email, event.name, event._id).catch(() => { });
                 }
             }
-            if (eventUpdated) {
-                event.registrationCount = Math.max(0, event.registrationCount - 1);
-                await event.save();
+            await event.save();
+        } else {
+            // Restore Stock for Merch
+            if (registration.merchandiseSelections && Array.isArray(registration.merchandiseSelections)) {
+                let eventUpdated = false;
+                for (const sel of registration.merchandiseSelections) {
+                    const itemIndex = event.items.findIndex(i =>
+                        i.name === sel.itemName &&
+                        i.size === sel.size &&
+                        i.color === sel.color &&
+                        i.variant === sel.variant
+                    );
+                    if (itemIndex > -1) {
+                        event.items[itemIndex].stock += (sel.quantity || 1);
+                        eventUpdated = true;
+                    }
+                }
+                if (eventUpdated) {
+                    event.registrationCount = Math.max(0, event.registrationCount - 1);
+                    await event.save();
+                }
             }
         }
 

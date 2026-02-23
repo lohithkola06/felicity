@@ -195,7 +195,7 @@ export default function ParticipantDashboard() {
                                             {entry.ticketId}
                                         </button>
                                     )}
-                                    {activeTab === 'upcoming' && entry.status !== 'cancelled' && entry.eventType !== 'merchandise' && (
+                                    {activeTab === 'upcoming' && entry.status !== 'cancelled' && (entry.eventType !== 'merchandise' || entry.status === 'pending_approval') && (
                                         <button onClick={() => promptCancel(entry.registrationId)}
                                             style={{ display: 'block', marginTop: '4px', color: '#d9534f', fontSize: '12px', cursor: 'pointer', background: 'none', border: 'none', textDecoration: 'underline' }}>
                                             Cancel
@@ -227,31 +227,6 @@ export default function ParticipantDashboard() {
                             <button onClick={executeCancel}
                                 style={{ padding: '8px 16px', background: '#d9534f', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
                                 Yes, Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Custom Modal for Invite Responses */}
-            {inviteActionConfig && (
-                <div style={{
-                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                    background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
-                }}>
-                    <div style={{ background: '#fff', padding: '24px', borderRadius: '8px', maxWidth: '400px', width: '90%', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '16px', color: '#333' }}>Confirm Action</h3>
-                        <p style={{ margin: 0, color: '#555', fontSize: '15px', lineHeight: '1.5' }}>
-                            Are you sure you want to {inviteActionConfig.action} this invite?
-                        </p>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
-                            <button onClick={() => setInviteActionConfig(null)}
-                                style={{ padding: '8px 16px', background: 'transparent', color: '#666', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                Cancel
-                            </button>
-                            <button onClick={executeInviteResponse}
-                                style={{ padding: '8px 16px', background: inviteActionConfig.action === 'decline' ? '#f44336' : '#4caf50', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
-                                Yes, {inviteActionConfig.action}
                             </button>
                         </div>
                     </div>

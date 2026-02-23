@@ -19,6 +19,7 @@ const registrationSchema = new mongoose.Schema({
     ticketId: { type: String },
     qrCode: String, // base64 data url
     paymentStatus: { type: String, enum: ['pending', 'paid'], default: 'pending' },
+    paymentProof: { type: String }, // stores the uploaded file URL for paid events
     registeredAt: { type: Date, default: Date.now },
 
     // attendance tracking (qr scanner feature)
